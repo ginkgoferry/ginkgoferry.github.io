@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import RightRail from '../../components/RightRail.astro';
+import { getSortedPosts } from '../../utils/posts';
+
+const posts = await getSortedPosts();
+---
+
+<BaseLayout title="posts" description="Every post, pinned here one note at a time.">
+  <h1><span class="underline-rough">posts</span></h1>
+  <p class="muted count">{posts.length} notes in total</p>
+
+  {
+    posts.length === 0 ? (
+      <p class="muted">
+        The notebook is still empty. Drop a .md into
+        <code>src/content/posts/</code> to write the first one.
+      </p>
+    ) : (
+      <div class="cards">
+        {posts.map((post, i) => <PostCard post={post} index={i} />)}
+      </div>
+    )
+  }
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .count {
+    margin: 1rem 0 0;
+  }
+
+  .cards {
+    display: grid;
+    gap: 2.2rem;
+    margin-top: 2.5rem;
+  }
+</style>

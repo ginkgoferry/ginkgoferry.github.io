@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RightRail from '../components/RightRail.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import { getSortedPosts } from '../utils/posts';
+
+const posts = await getSortedPosts();
+
+const byYear = posts.reduce<Map<number, typeof posts>>((acc, post) => {
+  const year = post.data.pubDate.getFullYear();
+  acc.set(year, [...(acc.get(year) ?? []), post]);
+  return acc;
+}, new Map());
+
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<BaseLayout title="archives" description="All posts, bound by year.">
+  <h1><span class="underline-rough">archives</span></h1>
+  <p class="muted count">bound by year · {posts.length} pages</p>
+
+  {
+    years.map((year) => (
+      <section>
+        <h2>{year}</h2>
+        <ul class="timeline">
+          {byYear.get(year)!.map((post) => (
+            <li>
+              <span class="faint date">
+                <FormattedDate date={post.data.pubDate} compact />
+              </span>
+              <a href={`/posts/${post.id}/`}>{post.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .count {
+    margin: 1rem 0 0;
+  }
+
+  section {
+    margin-top: 3rem;
+  }
+
+  h2 {
+    display: inline-block;
+    font-size: 1.3rem;
+    color: var(--blue);
+  }
+
+  /* 装订线：左侧虚线 + 手绘圆点 */
+  .timeline {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0 0 0 1.5rem;
+    border-left: 2px dashed var(--line-strong);
+  }
+
+  .timeline li {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 1rem;
+  }
+
+  .timeline li + li {
+    margin-top: 0.9rem;
+  }
+
+  .timeline li::before {
+    content: '';
+    position: absolute;
+    left: calc(-1.5rem - 6px);
+    top: 0.62em;
+    width: 9px;
+    height: 9px;
+    background: var(--paper);
+    border: 2px solid var(--red);
+    border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+  }
+
+  .timeline a {
+    text-decoration: none;
+  }
+
+  .timeline a:hover {
+    color: var(--red);
+    text-decoration: underline;
+    text-decoration-style: wavy;
+  }
+</style>

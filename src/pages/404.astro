@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Doodle from '../components/Doodle.astro';
+---
+
+<BaseLayout title="this page got torn out" description="The page you're looking for doesn't exist.">
+  <div class="box">
+    <p class="code faint">404</p>
+    <h1><span class="underline-rough">this page got torn out</span></h1>
+    <p class="muted">
+      This page isn't in the notebook — the link might be wrong, or I might
+      have torn it out and redrawn it.
+    </p>
+    <p class="doodles" aria-hidden="true">
+      <Doodle name="star" />
+      <Doodle name="pencil" />
+      <Doodle name="arrow" />
+    </p>
+    <p class="links">
+      <a href="/">back to cover</a> · <a href="/archives/">browse archives</a>
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .box {
+    padding-block: 3rem;
+    max-width: var(--measure);
+  }
+
+  .code {
+    margin: 0 0 0.75rem;
+    letter-spacing: 0.15em;
+  }
+
+  .doodles {
+    display: flex;
+    gap: 1.25rem;
+    margin: 2rem 0 0;
+    font-size: 1.5rem;
+    color: var(--yellow);
+  }
+
+  .doodles :global(svg):nth-child(2) {
+    color: var(--blue);
+    transform: rotate(8deg);
+  }
+
+  .doodles :global(svg):nth-child(3) {
+    color: var(--red);
+    transform: rotate(-6deg);
+  }
+
+  .links {
+    margin-top: 1.5rem;
+  }
+
+  .links a {
+    color: var(--red);
+  }
+</style>

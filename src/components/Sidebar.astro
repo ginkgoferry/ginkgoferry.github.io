@@ -1,0 +1,37 @@
+---
+import Doodle from './Doodle.astro';
+import { NAV_LINKS, SITE_MOTTO, SITE_TITLE, SOCIAL_LINKS } from '../consts';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path.startsWith(href);
+
+const socialIcon = { GitHub: 'github', Email: 'mail' } as const;
+---
+
+<aside class="sidebar">
+  <a href="/" class="brand underline-rough">{SITE_TITLE}</a>
+  <p class="motto">“{SITE_MOTTO}”</p>
+
+  <nav class="side-nav" aria-label="site navigation">
+    {
+      NAV_LINKS.map((link) => (
+        <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
+          <Doodle name="arrow" class="arrow" />
+          {link.label}
+        </a>
+      ))
+    }
+  </nav>
+
+  <div class="side-bottom">
+    {
+      SOCIAL_LINKS.map((link) => (
+        <a class="icon-link" href={link.href} title={link.label}>
+          <span class="sr-only">{link.label}</span>
+          <Doodle name={socialIcon[link.label]} />
+        </a>
+      ))
+    }
+  </div>
+</aside>

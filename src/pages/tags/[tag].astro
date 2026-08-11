@@ -1,0 +1,67 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import RightRail from '../../components/RightRail.astro';
+import { getSortedPosts } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  const tags = [
+    ...new Set(posts.flatMap((post: CollectionEntry<'posts'>) => post.data.tags)),
+  ] as string[];
+
+  return tags.map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: posts.filter((post: CollectionEntry<'posts'>) =>
+        post.data.tags.includes(tag),
+      ),
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<BaseLayout title={`#${tag}`} description={`All posts under the ${tag} sticker.`}>
+  <h1>
+    <span class="sticker" style="color: var(--red); --tilt: -1.5deg">#{tag}</span>
+  </h1>
+  <p class="muted count">{posts.length} posts under this sticker</p>
+
+  <div class="cards">
+    {posts.map((post: CollectionEntry<'posts'>, i: number) => (
+      <PostCard post={post} index={i} />
+    ))}
+  </div>
+
+  <p class="back">
+    <a href="/tags/">← back to the tag wall</a>
+  </p>
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .count {
+    margin: 1.25rem 0 0;
+  }
+
+  .cards {
+    display: grid;
+    gap: 2.2rem;
+    margin-top: 2.5rem;
+  }
+
+  .back {
+    margin-top: 3rem;
+  }
+
+  .back a {
+    color: var(--red);
+  }
+</style>

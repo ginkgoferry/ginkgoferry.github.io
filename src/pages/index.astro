@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import RightRail from '../components/RightRail.astro';
+import Doodle from '../components/Doodle.astro';
+import { FOCUS_TAGS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { getSortedPosts } from '../utils/posts';
+
+const posts = await getSortedPosts();
+const recent = posts.slice(0, 3);
+
+const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
+---
+
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <section class="hero">
+    <p class="eyebrow">
+      <Doodle name="arrow" class="arrow" />
+      hello there
+    </p>
+    <h1><span class="underline-rough">{SITE_TITLE}</span></h1>
+    <p class="lede">
+      A hand-drawn notebook about code and everyday things. Updated whenever I
+      feel like it.
+    </p>
+    <p class="stickers" aria-label="things I'm into">
+      {
+        FOCUS_TAGS.map((tag, i) => (
+          <span
+            class="sticker"
+            style={`color: ${COLORS[i % COLORS.length]}; --tilt: ${i % 2 ? 1.5 : -1.8}deg`}
+          >
+            {tag}
+          </span>
+        ))
+      }
+    </p>
+  </section>
+
+  {
+    recent.length > 0 && (
+      <section class="recent">
+        <h2 class="section-title">
+          recently written
+          <span class="squiggle"></span>
+        </h2>
+        <div class="cards">
+          {recent.map((post, i) => <PostCard post={post} index={i} />)}
+        </div>
+        {
+          posts.length > recent.length && (
+            <p class="more">
+              <a href="/posts/">browse all {posts.length} posts →</a>
+            </p>
+          )
+        }
+      </section>
+    )
+  }
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .hero h1 {
+    margin-top: 0.6rem;
+    font-size: clamp(2.1rem, 1.6rem + 2vw, 2.9rem);
+  }
+
+  .lede {
+    max-width: var(--measure);
+    margin: 1.4rem 0 0;
+    color: var(--ink-soft);
+  }
+
+  .stickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 0.55rem;
+    margin: 1.8rem 0 0;
+  }
+
+  .recent {
+    margin-top: 4.5rem;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+  }
+
+  .section-title .squiggle {
+    margin-top: 0.35rem;
+    width: 6.5rem;
+    color: var(--yellow);
+  }
+
+  .cards {
+    display: grid;
+    gap: 2.2rem;
+    margin-top: 2rem;
+  }
+
+  .more {
+    margin-top: 2rem;
+  }
+
+  .more a {
+    color: var(--red);
+  }
+</style>

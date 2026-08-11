@@ -1,0 +1,168 @@
+#!/usr/bin/env node
+// 拖拽发布：把 Typora / Markdown 笔记转换成站内文章。
+//
+// 用法（在终端里敲 `npm run publish -- ` 后把 .md 文件拖进窗口即可）：
+//   npm run publish -- ~/Notes/xxx.md                     转换并写入 src/content/posts/
+//   npm run publish -- ~/Notes/xxx.md --tags '操作系统,并发'  带标签
+//   npm run publish -- ~/Notes/xxx.md --title '标题'        指定标题（默认取首个 # 或文件名）
+//   npm run publish -- ~/Notes/xxx.md --push              转换后 git add/commit/push 上线
+//
+// 它会自动处理：
+//   - Typora 的绝对路径图片（含文件名里的窄空格）→ 拷进 public/images/<slug>/ 并改写引用
+//   - > [!NOTE] 等 callout → 普通引用
+//   - 生成 frontmatter（title/description/pubDate/tags）
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+
+// ---------- 参数 ----------
+const argv = process.argv.slice(2);
+const files = [];
+const opts = { tags: [], push: false, force: false };
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a === '--tags') opts.tags = (argv[++i] ?? '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+  else if (a === '--title') opts.title = argv[++i];
+  else if (a === '--slug') opts.slug = argv[++i];
+  else if (a === '--date') opts.date = argv[++i];
+  else if (a === '--desc') opts.desc = argv[++i];
+  else if (a === '--push') opts.push = true;
+  else if (a === '--force') opts.force = true;
+  else if (a === '--help' || a === '-h') {
+    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--date YYYY-MM-DD] [--desc 摘要] [--push] [--force]');
+    process.exit(0);
+  } else files.push(a);
+}
+if (files.length === 0) {
+  console.error('❌ 把 .md 文件拖进来：npm run publish -- <笔记.md>');
+  process.exit(1);
+}
+
+const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
+
+const slugify = (s) => {
+  const out = s
+    .toLowerCase()
+    .replace(/[^a-z0-9一-鿿]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return out || `post-${Date.now()}`;
+};
+
+// ---------- 转换单篇 ----------
+for (const file of files) {
+  const abs = path.resolve(file);
+  if (!fs.existsSync(abs)) {
+    console.error(`❌ 找不到文件：${abs}`);
+    continue;
+  }
+  let src = fs.readFileSync(abs, 'utf8');
+
+  // 已有 frontmatter 就原样保留，只转换正文
+  let existingFm = '';
+  if (/^---\n/.test(src)) {
+    const m = src.match(/^---\n([\s\S]*?)\n---\n?/);
+    if (m) {
+      existingFm = m[0];
+      src = src.slice(m[0].length);
+    }
+  }
+
+  const base = path.basename(abs, path.extname(abs));
+
+  // 标题：--title > 首个一级标题 > 文件名
+  let title = opts.title;
+  const h1 = src.match(/^#\s+(.+)\s*$/m);
+  if (!title && h1) {
+    title = h1[1].trim();
+    src = src.replace(h1[0], ''); // 页面会渲染 frontmatter 标题，去掉正文里的重复 H1
+  }
+  if (!title) title = base;
+
+  const slug = opts.slug ?? slugify(base);
+  const postPath = path.join(ROOT, 'src/content/posts', `${slug}.md`);
+  if (fs.existsSync(postPath) && !opts.force) {
+    console.error(`❌ 已存在 ${path.relative(ROOT, postPath)}，要覆盖请加 --force，或换 --slug`);
+    continue;
+  }
+
+  // ---------- 图片迁移 ----------
+  const imgDir = path.join(ROOT, 'public/images', slug);
+  const seen = new Map(); // 源路径 -> 站内名
+  let n = 0;
+  const migrate = (srcAttr) => {
+    if (/^(https?:)?\/\//.test(srcAttr) || srcAttr.startsWith('/images/')) return null;
+    const local = srcAttr.startsWith('/') ? srcAttr : path.resolve(path.dirname(abs), srcAttr);
+    if (!fs.existsSync(local)) {
+      console.warn(`⚠️ 图片不存在，保持原样：${srcAttr}`);
+      return null;
+    }
+    if (!seen.has(local)) {
+      n += 1;
+      const ext = (path.extname(local) || '.png').toLowerCase();
+      const name = `img-${String(n).padStart(2, '0')}${ext}`;
+      fs.mkdirSync(imgDir, { recursive: true });
+      fs.copyFileSync(local, path.join(imgDir, name));
+      seen.set(local, name);
+    }
+    return `/images/${slug}/${seen.get(local)}`;
+  };
+
+  // <img src="..." alt="..." ...> → ![alt](...)
+  src = src.replace(/<img\s+[^>]*src="([^"]+)"[^>]*>/g, (tag, s) => {
+    const url = migrate(s);
+    if (!url) return tag;
+    const alt = (tag.match(/alt="([^"]*)"/) ?? [])[1] ?? '';
+    return `![${alt}](${url})`;
+  });
+  // ![alt](本地路径) → ![alt](/images/...)
+  src = src.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (m, alt, s) => {
+    const url = migrate(s);
+    return url ? `![${alt}](${url})` : m;
+  });
+
+  // ---------- callout → 普通引用 ----------
+  src = src.replace(/^>\s*\[!\w+\]\s*\n>\s*\n/gm, '');
+  src = src.replace(/^>\s*\[!\w+\]\s*\n/gm, '');
+
+  // ---------- 摘要：第一段普通文字 ----------
+  let desc = opts.desc;
+  if (!desc) {
+    const line = src
+      .split('\n')
+      .map((l) => l.trim())
+      .find((l) => l && !/^[#>!`[-]/.test(l) && !/^</.test(l));
+    desc = line ? line.replace(/[*_`]/g, '').slice(0, 60) : title;
+  }
+
+  const pubDate = opts.date ?? new Date().toISOString().slice(0, 10);
+
+  const fm =
+    existingFm ||
+    `---\ntitle: ${q(title)}\ndescription: ${q(desc)}\npubDate: ${pubDate}\ntags: [${opts.tags.map(q).join(', ')}]\n---\n`;
+
+  fs.mkdirSync(path.dirname(postPath), { recursive: true });
+  fs.writeFileSync(postPath, fm + src.replace(/^\n+/, '\n'));
+
+  console.log(`✅ 文章：${path.relative(ROOT, postPath)}`);
+  console.log(`   标题：${title}　日期：${pubDate}　标签：${opts.tags.join(', ') || '（无）'}`);
+  console.log(`   图片：${seen.size} 张 → public/images/${slug}/`);
+
+  // ---------- 上线 ----------
+  if (opts.push) {
+    const rel = [path.relative(ROOT, postPath), ...(seen.size ? [`public/images/${slug}`] : [])];
+    try {
+      // 用 argv 数组调 git，不经 shell，标题/路径里的特殊字符不会被解释
+      execFileSync('git', ['add', '--', ...rel], { cwd: ROOT, stdio: 'inherit' });
+      execFileSync('git', ['commit', '-m', `publish: ${title}`], { cwd: ROOT, stdio: 'inherit' });
+      execFileSync('git', ['push'], { cwd: ROOT, stdio: 'inherit' });
+      console.log('🚀 已 push，等 Actions 部署完成即可上线');
+    } catch {
+      console.error('❌ push 失败，请手动 git add/commit/push');
+    }
+  } else {
+    console.log('   预览：npm run dev → http://localhost:4321；满意后 git push 即上线（或加 --push）');
+  }
+}

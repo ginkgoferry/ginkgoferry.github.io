@@ -1,0 +1,114 @@
+---
+// 窄屏（右栏收起）时的浮动目录：右下角一颗手绘按钮，点开弹出目录。
+// 宽屏下右栏本身就是 contents，和 heyween 的响应式行为一致。
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <details class="toc-fab">
+      <summary>contents</summary>
+      <div class="popup">
+        <ol>
+          {
+            items.map((h) => (
+              <li class={h.depth === 3 ? 'sub' : undefined}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </details>
+  )
+}
+
+<script is:inline>
+  // 点目录跳转后顺手把弹窗合上
+  document.querySelectorAll('.toc-fab a').forEach((a) =>
+    a.addEventListener('click', () =>
+      a.closest('details').removeAttribute('open'),
+    ),
+  );
+</script>
+
+<style>
+  .toc-fab {
+    display: none;
+  }
+
+  @media (max-width: 1199.98px) {
+    .toc-fab {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 70;
+      display: block;
+    }
+
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.4rem 1.1rem;
+      border: 1.6px solid var(--line-strong);
+      border-radius: 1.2rem 0.9rem 1.3rem 0.8rem / 0.9rem 1.3rem 0.8rem 1.2rem;
+      background: var(--card);
+      color: var(--ink-soft);
+      box-shadow: 3px 4px 0 var(--shadow);
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .popup {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 0.7rem);
+      width: min(17rem, calc(100vw - 2.5rem));
+      max-height: min(60vh, 26rem);
+      overflow: auto;
+      padding: 1rem 1.2rem;
+      border: 1.6px solid var(--line-strong);
+      border-radius: 0.9rem 1.4rem 1rem 1.5rem / 1.4rem 0.9rem 1.5rem 1rem;
+      background: var(--card);
+      box-shadow: 4px 5px 0 var(--shadow);
+    }
+
+    ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    li + li {
+      margin-top: 0.55rem;
+    }
+
+    .sub {
+      padding-left: 1rem;
+      color: var(--ink-faint);
+    }
+
+    a {
+      text-decoration: none;
+      color: var(--ink-soft);
+    }
+
+    a:hover {
+      color: var(--red);
+      text-decoration: underline;
+      text-decoration-style: wavy;
+    }
+  }
+</style>

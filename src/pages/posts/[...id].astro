@@ -1,0 +1,157 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import TocRail from '../../components/TocRail.astro';
+import TocFab from '../../components/TocFab.astro';
+import { getSortedPosts, readingTime } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+
+  return posts.map((post: CollectionEntry<'posts'>, index: number) => ({
+    params: { id: post.id },
+    props: {
+      post,
+      newer: posts[index - 1] ?? null,
+      older: posts[index + 1] ?? null,
+    },
+  }));
+}
+
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
+const minutes = readingTime(post.body);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  lang="zh-CN"
+>
+  <article>
+    <header>
+      <h1><span class="underline-rough">{post.data.title}</span></h1>
+      <p class="meta faint">
+        <FormattedDate date={post.data.pubDate} />
+        <span>{minutes} min read</span>
+        {post.data.updatedDate && (
+          <span>
+            updated <FormattedDate date={post.data.updatedDate} compact />
+          </span>
+        )}
+      </p>
+      {
+        post.data.tags.length > 0 && (
+          <p class="tags">
+            {post.data.tags.map((tag: string, i: number) => (
+              <a
+                href={`/tags/${tag}/`}
+                class="sticker"
+                style={`--tilt: ${i % 2 ? 1.3 : -1.5}deg`}
+              >
+                #{tag}
+              </a>
+            ))}
+          </p>
+        )
+      }
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+
+  <nav class="pager" aria-label="post navigation">
+    {
+      older ? (
+        <a href={`/posts/${older.id}/`} class="prev">
+          <span class="faint">← older</span>
+          {older.data.title}
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      newer && (
+        <a href={`/posts/${newer.id}/`} class="next">
+          <span class="faint">newer →</span>
+          {newer.data.title}
+        </a>
+      )
+    }
+  </nav>
+
+  <TocFab headings={headings} />
+
+  <Fragment slot="rail">
+    <TocRail headings={headings} />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  article > header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1.6px dashed var(--line-strong);
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2rem);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.1rem;
+    margin: 1.1rem 0 0;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.1rem 0 0;
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 4rem;
+    padding-top: 1.75rem;
+    border-top: 1.6px dashed var(--line-strong);
+    font-size: 1rem;
+  }
+
+  .pager a {
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  .pager a:hover {
+    color: var(--red);
+  }
+
+  .pager .next {
+    text-align: right;
+  }
+
+  .pager span {
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  @media (max-width: 640px) {
+    .pager {
+      grid-template-columns: 1fr;
+    }
+
+    .pager .next {
+      text-align: left;
+    }
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+// 霞鹜文楷：unicode-range 分片，构建时 Vite 把 woff2 全部拷进产物，
+// 访客浏览器只下载页面实际用到字符的那几片。
+import 'lxgw-wenkai-webfont/lxgwwenkai-regular.css';
+import 'lxgw-wenkai-webfont/lxgwwenkai-bold.css';
+import BaseHead from '../components/BaseHead.astro';
+import TopBar from '../components/TopBar.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  type?: 'website' | 'article';
+  /** 文章页正文是中文，传 'zh-CN' */
+  lang?: string;
+}
+
+const { title, description, type, lang = 'en-US' } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <BaseHead title={title} description={description} type={type} />
+    <script is:inline>
+      // 首屏之前定好主题：手动切过听 localStorage，否则跟随系统。
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme =
+        stored ?? (prefersDark ? 'dark' : 'light');
+    </script>
+  </head>
+  <body>
+    <div class="shell">
+      <a href="#content" class="skip">skip to content</a>
+      <TopBar />
+      <div class="columns">
+        <Sidebar />
+        <main id="content">
+          <slot />
+        </main>
+        <aside class="rail" aria-label="sidebar">
+          <slot name="rail" />
+        </aside>
+      </div>
+      <Footer />
+    </div>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+---
+import Doodle from './Doodle.astro';
+---
+
+<button id="theme-toggle" type="button" class="toggle wobble-b">
+  <span class="sr-only">toggle dark / light theme</span>
+  <span class="sun"><Doodle name="sun" /></span>
+  <span class="moon"><Doodle name="moon" /></span>
+</button>
+
+<style>
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: var(--card);
+    border: 1.6px solid var(--line-strong);
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .toggle:hover {
+    color: var(--red);
+    transform: rotate(-5deg);
+  }
+
+  /* 亮色下画月亮（点它上黑板课），暗色下画太阳 */
+  .sun {
+    display: none;
+  }
+
+  :global(:root[data-theme='dark']) .sun {
+    display: block;
+  }
+
+  :global(:root[data-theme='dark']) .moon {
+    display: none;
+  }
+</style>
+
+<script>
+  const button = document.getElementById('theme-toggle');
+
+  button?.addEventListener('click', () => {
+    const next =
+      document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+  });
+</script>

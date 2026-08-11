@@ -1,0 +1,75 @@
+---
+import Doodle from './Doodle.astro';
+import { formatChars, getSiteStats, getSortedPosts } from '../utils/posts';
+
+const stats = await getSiteStats();
+const posts = await getSortedPosts();
+const recent = posts.slice(0, 5);
+
+// 标签按出现次数排序，次数多的贴纸字号大一点
+const tagCount = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+}
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+
+const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
+---
+
+<section>
+  <h2 class="rail-title">notebook</h2>
+  <span class="squiggle"></span>
+  <div class="stats-grid">
+    <div class="stat hand-box wobble-a">
+      <span class="n" style="color: var(--red)">{stats.posts}</span>
+      <span class="l">posts</span>
+    </div>
+    <div class="stat hand-box wobble-b">
+      <span class="n" style="color: var(--blue)">{formatChars(stats.chars)}</span>
+      <span class="l">words</span>
+    </div>
+    <div class="stat hand-box wobble-c">
+      <span class="n" style="color: var(--green)">{stats.days}</span>
+      <span class="l">days</span>
+    </div>
+    <div class="stat hand-box wobble-a">
+      <span class="n" style="color: var(--yellow)">{stats.tags}</span>
+      <span class="l">tags</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="rail-title">recently scribbled</h2>
+  <span class="squiggle"></span>
+  <ul class="checklist">
+    {
+      recent.map((post) => (
+        <li>
+          <a href={`/posts/${post.id}/`}>
+            <Doodle name="check" class="box" />
+            {post.data.title}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<section>
+  <h2 class="rail-title">tag stickers</h2>
+  <span class="squiggle"></span>
+  <div class="sticker-wall">
+    {
+      tags.map(([tag, count], i) => (
+        <a
+          href={`/tags/${tag}/`}
+          class="sticker"
+          style={`color: ${COLORS[i % COLORS.length]}; --tilt: ${i % 2 ? 1.4 : -1.6}deg; font-size: ${count > 1 ? 1.05 : 0.95}rem`}
+        >
+          #{tag} ×{count}
+        </a>
+      ))
+    }
+  </div>
+</section>

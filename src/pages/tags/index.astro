@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RightRail from '../../components/RightRail.astro';
+import { getSortedPosts } from '../../utils/posts';
+
+const posts = await getSortedPosts();
+
+const tagCount = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+}
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
+
+const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
+---
+
+<BaseLayout title="tags" description="All the stickers on the wall.">
+  <h1><span class="underline-rough">tags</span></h1>
+  <p class="muted count">{tags.length} stickers</p>
+
+  <div class="wall">
+    {
+      tags.map(([tag, count], i) => (
+        <a
+          href={`/tags/${tag}/`}
+          class="sticker"
+          style={`color: ${COLORS[i % COLORS.length]}; --tilt: ${(i % 5) - 2}deg; font-size: ${count > 1 ? 1.15 : 1.05}rem`}
+        >
+          #{tag} ×{count}
+        </a>
+      ))
+    }
+  </div>
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .count {
+    margin: 1rem 0 0;
+  }
+
+  .wall {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 0.8rem;
+    align-items: center;
+    margin-top: 2.5rem;
+    max-width: var(--measure);
+  }
+</style>
