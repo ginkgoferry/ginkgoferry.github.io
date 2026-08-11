@@ -9,12 +9,21 @@
 //
 // 它会自动处理：
 //   - Typora 的绝对路径图片（含文件名里的窄空格）→ 拷进 public/images/<slug>/ 并改写引用
+//   - PNG/JPEG 自动转 WebP（依赖 sharp，转不了就原样保留）
 //   - > [!NOTE] 等 callout → 普通引用
 //   - 生成 frontmatter（title/description/pubDate/tags）
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+
+// 可选依赖：装了 sharp 就把 PNG/JPEG 转成 WebP，体积大约降到 1/5
+let sharp = null;
+try {
+  sharp = (await import('sharp')).default;
+} catch {
+  console.warn('⚠️ 未安装 sharp，图片将保持原格式（npm install -D sharp 即可启用 WebP 转换）');
+}
 
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -92,7 +101,8 @@ for (const file of files) {
   const imgDir = path.join(ROOT, 'public/images', slug);
   const seen = new Map(); // 源路径 -> 站内名
   let n = 0;
-  const migrate = (srcAttr) => {
+  let webpCount = 0;
+  const migrate = async (srcAttr) => {
     if (/^(https?:)?\/\//.test(srcAttr) || srcAttr.startsWith('/images/')) return null;
     const local = srcAttr.startsWith('/') ? srcAttr : path.resolve(path.dirname(abs), srcAttr);
     if (!fs.existsSync(local)) {
@@ -101,27 +111,43 @@ for (const file of files) {
     }
     if (!seen.has(local)) {
       n += 1;
-      const ext = (path.extname(local) || '.png').toLowerCase();
-      const name = `img-${String(n).padStart(2, '0')}${ext}`;
       fs.mkdirSync(imgDir, { recursive: true });
-      fs.copyFileSync(local, path.join(imgDir, name));
+      const ext = (path.extname(local) || '.png').toLowerCase();
+      const convertible = sharp && ['.png', '.jpg', '.jpeg'].includes(ext);
+      const name = `img-${String(n).padStart(2, '0')}${convertible ? '.webp' : ext}`;
+      const dest = path.join(imgDir, name);
+      if (convertible) {
+        try {
+          await sharp(local).webp({ quality: 80 }).toFile(dest);
+          webpCount += 1;
+        } catch (err) {
+          console.warn(`⚠️ WebP 转换失败，保留原图：${path.basename(local)}（${err.message}）`);
+          fs.copyFileSync(local, path.join(imgDir, `img-${String(n).padStart(2, '0')}${ext}`));
+          seen.set(local, `img-${String(n).padStart(2, '0')}${ext}`);
+          return `/images/${slug}/${seen.get(local)}`;
+        }
+      } else {
+        fs.copyFileSync(local, dest);
+      }
       seen.set(local, name);
     }
     return `/images/${slug}/${seen.get(local)}`;
   };
 
   // <img src="..." alt="..." ...> → ![alt](...)
-  src = src.replace(/<img\s+[^>]*src="([^"]+)"[^>]*>/g, (tag, s) => {
-    const url = migrate(s);
-    if (!url) return tag;
-    const alt = (tag.match(/alt="([^"]*)"/) ?? [])[1] ?? '';
-    return `![${alt}](${url})`;
-  });
+  const imgTags = [...src.matchAll(/<img\s+[^>]*src="([^"]+)"[^>]*>/g)];
+  for (const mTag of imgTags) {
+    const url = await migrate(mTag[1]);
+    if (!url) continue;
+    const alt = (mTag[0].match(/alt="([^"]*)"/) ?? [])[1] ?? '';
+    src = src.replace(mTag[0], `![${alt}](${url})`);
+  }
   // ![alt](本地路径) → ![alt](/images/...)
-  src = src.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (m, alt, s) => {
-    const url = migrate(s);
-    return url ? `![${alt}](${url})` : m;
-  });
+  const mdImgs = [...src.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)];
+  for (const mImg of mdImgs) {
+    const url = await migrate(mImg[2]);
+    if (url) src = src.replace(mImg[0], `![${mImg[1]}](${url})`);
+  }
 
   // ---------- callout → 普通引用 ----------
   src = src.replace(/^>\s*\[!\w+\]\s*\n>\s*\n/gm, '');
@@ -148,7 +174,7 @@ for (const file of files) {
 
   console.log(`✅ 文章：${path.relative(ROOT, postPath)}`);
   console.log(`   标题：${title}　日期：${pubDate}　标签：${opts.tags.join(', ') || '（无）'}`);
-  console.log(`   图片：${seen.size} 张 → public/images/${slug}/`);
+  console.log(`   图片：${seen.size} 张 → public/images/${slug}/` + (webpCount ? `（${webpCount} 张已转 WebP）` : ''));
 
   // ---------- 上线 ----------
   if (opts.push) {

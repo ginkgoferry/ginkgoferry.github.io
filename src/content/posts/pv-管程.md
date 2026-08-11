@@ -7,45 +7,45 @@ tags: ['操作系统', '并发']
 
 ## 同步和互斥
 
-![Screenshot 2026-06-06 at 4.11.35 PM](/images/pv-管程/img-01.png)
+![Screenshot 2026-06-06 at 4.11.35 PM](/images/pv-管程/img-01.webp)
 
 ## 进程互斥的软件实现方法
 
-![Screenshot 2026-06-06 at 4.16.05 PM](/images/pv-管程/img-02.png)
+![Screenshot 2026-06-06 at 4.16.05 PM](/images/pv-管程/img-02.webp)
 
 ## 进程互斥的硬件实现方法
 
-![Screenshot 2026-06-06 at 4.28.20 PM](/images/pv-管程/img-03.png)
+![Screenshot 2026-06-06 at 4.28.20 PM](/images/pv-管程/img-03.webp)
 
 ## 信号量机制
 
 ### 信号量
 
-![Screenshot 2026-06-06 at 4.35.15 PM](/images/pv-管程/img-04.png)
+![Screenshot 2026-06-06 at 4.35.15 PM](/images/pv-管程/img-04.webp)
 
 #### 整型信号量
 
 #### 记录型信号量
 
-![Screenshot 2026-06-06 at 4.44.45 PM](/images/pv-管程/img-05.png)
+![Screenshot 2026-06-06 at 4.44.45 PM](/images/pv-管程/img-05.webp)
 
 ### 实现
 
-![Screenshot 2026-06-06 at 4.53.36 PM](/images/pv-管程/img-06.png)
+![Screenshot 2026-06-06 at 4.53.36 PM](/images/pv-管程/img-06.webp)
 
 #### 进程互斥
 
-![Screenshot 2026-06-06 at 4.56.44 PM](/images/pv-管程/img-07.png)
+![Screenshot 2026-06-06 at 4.56.44 PM](/images/pv-管程/img-07.webp)
 
 #### 进程同步
 
-![Screenshot 2026-06-06 at 5.00.35 PM](/images/pv-管程/img-08.png)
+![Screenshot 2026-06-06 at 5.00.35 PM](/images/pv-管程/img-08.webp)
 
 #### 进程的前驱关系
 
 多个进程同步
 
-![Screenshot 2026-06-06 at 5.04.02 PM](/images/pv-管程/img-09.png)
+![Screenshot 2026-06-06 at 5.04.02 PM](/images/pv-管程/img-09.webp)
 
 ### 解题套路
 
@@ -297,9 +297,9 @@ Process P2() {
 
 ### 生产者-消费者
 
-![Screenshot 2026-06-06 at 7.28.44 PM](/images/pv-管程/img-10.png)
+![Screenshot 2026-06-06 at 7.28.44 PM](/images/pv-管程/img-10.webp)
 
-![Screenshot 2026-06-06 at 7.38.54 PM](/images/pv-管程/img-11.png)
+![Screenshot 2026-06-06 at 7.38.54 PM](/images/pv-管程/img-11.webp)
 
 #### 基础
 
@@ -404,9 +404,9 @@ void Consumer() {
 
 #### 多生产者-多消费者——苹果-橘子问题
 
-![Screenshot 2026-06-06 at 7.46.51 PM](/images/pv-管程/img-12.png)
+![Screenshot 2026-06-06 at 7.46.51 PM](/images/pv-管程/img-12.webp)
 
-![Screenshot 2026-06-06 at 7.48.42 PM](/images/pv-管程/img-13.png)
+![Screenshot 2026-06-06 at 7.48.42 PM](/images/pv-管程/img-13.webp)
 
 信号量+PV
 
@@ -580,7 +580,7 @@ void daughter() {
 
 > 并不是完全意义上的生产者-消费者模型，更像是生产者-消费者+严格交替同步
 
-![Screenshot 2026-06-09 at 11.52.10 AM](/images/pv-管程/img-14.png)
+![Screenshot 2026-06-09 at 11.52.10 AM](/images/pv-管程/img-14.webp)
 
 信号量+PV
 
@@ -805,7 +805,7 @@ Process Consumer() {
 
 #### 多路供应装配
 
-![Screenshot 2026-06-09 at 11.41.35 AM](/images/pv-管程/img-15.png)
+![Screenshot 2026-06-09 at 11.41.35 AM](/images/pv-管程/img-15.webp)
 
 信号量+PV
 
@@ -939,7 +939,7 @@ void Assembler() {
 
 #### 动态差值受限
 
-![Screenshot 2026-06-09 at 11.54.21 AM](/images/pv-管程/img-16.png)
+![Screenshot 2026-06-09 at 11.54.21 AM](/images/pv-管程/img-16.webp)
 
 信号量+PV
 
@@ -1078,7 +1078,7 @@ void Consumer() {
 
 #### 多级流水线串联
 
-![Screenshot 2026-06-08 at 8.02.25 PM](/images/pv-管程/img-17.png)
+![Screenshot 2026-06-08 at 8.02.25 PM](/images/pv-管程/img-17.webp)
 
 信号量+PV
 
@@ -1183,7 +1183,7 @@ void Pi(int i) {
 
 ### 读者-写者
 
-![Screenshot 2026-06-07 at 3.44.46 PM](/images/pv-管程/img-18.png)
+![Screenshot 2026-06-07 at 3.44.46 PM](/images/pv-管程/img-18.webp)
 
 读者共享，写写互斥，读写互斥
 
