@@ -76,6 +76,13 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* 目录跳转平滑滚动；系统开了「减弱动态效果」的用户保持硬跳 */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   margin: 0;
   background: var(--paper);
@@ -323,6 +330,13 @@ a:hover {
 
 .topbar .num {
   font-variant-numeric: tabular-nums;
+}
+
+/* 窄屏顶栏只留站名和主题按钮，统计文字放不下就收起来 */
+@media (max-width: 640px) {
+  .topbar .num {
+    display: none;
+  }
 }
 
 /* --- 栏位 --- */
@@ -589,6 +603,13 @@ a:hover {
   /* 正文是中文，行高要比英文 UI 松；宽度跟首页一样撑满中间列 */
   font-size: 1.0625rem;
   line-height: 1.9;
+  /* 长链接/长单词不撑破版心 */
+  overflow-wrap: break-word;
+}
+
+/* 目录锚点跳转后，标题不被 sticky 顶栏盖住 */
+.prose [id] {
+  scroll-margin-top: calc(var(--topbar-h) + 1.25rem);
 }
 
 .prose > * + * {
