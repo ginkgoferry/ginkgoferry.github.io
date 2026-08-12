@@ -1,6 +1,7 @@
 ---
 import Doodle from './Doodle.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import SearchModal from './SearchModal.astro';
 import { SITE_TITLE } from '../consts';
 import { formatChars, getSiteStats, getSortedPosts } from '../utils/posts';
 
@@ -20,5 +21,6 @@ const updated = latest
   <span class="num">
     {stats.posts} {stats.posts === 1 ? 'post' : 'posts'} · {formatChars(stats.chars)} words · updated {updated}
   </span>
+  <SearchModal />
   <ThemeToggle />
 </header>

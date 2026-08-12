@@ -1,0 +1,184 @@
+---
+import Doodle from './Doodle.astro';
+---
+
+<button id="search-open" type="button" class="search-btn wobble-a" aria-label="search">
+  <Doodle name="search" />
+</button>
+
+<dialog id="search-dialog" aria-label="search the notebook">
+  <input
+    id="search-input"
+    type="search"
+    placeholder="search titles, tags, categories…"
+    autocomplete="off"
+  />
+  <ul id="search-results" class="results"></ul>
+</dialog>
+
+<style>
+  .search-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: var(--card);
+    border: 1.6px solid var(--line-strong);
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .search-btn:hover {
+    color: var(--red);
+    transform: rotate(5deg);
+  }
+
+  dialog {
+    border: 1.6px solid var(--line-strong);
+    border-radius: 10px 4px 12px 6px / 6px 12px 4px 10px;
+    background: var(--card);
+    color: var(--ink);
+    padding: 1.3rem 1.4rem;
+    width: min(34rem, calc(100vw - 2rem));
+    box-shadow: 4px 6px 0 var(--shadow);
+  }
+
+  dialog::backdrop {
+    background: rgba(20, 16, 10, 0.4);
+  }
+
+  input {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.6px solid var(--line-strong);
+    border-radius: 8px 3px 9px 4px / 4px 9px 3px 8px;
+    padding: 0.45rem 0.8rem;
+  }
+
+  input:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+
+  .results {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .results:empty {
+    margin: 0;
+  }
+
+  /* 结果 li 是运行时 JS 生成的，拿不到 scoped 属性，用 :global 穿透 */
+  .results :global(li + li) {
+    margin-top: 0.6rem;
+  }
+
+  .results :global(a) {
+    text-decoration: none;
+  }
+
+  .results :global(a:hover) {
+    color: var(--red);
+    text-decoration: underline;
+    text-decoration-style: wavy;
+  }
+
+  .results :global(.when) {
+    margin-left: 0.7rem;
+    font-size: 0.85rem;
+  }
+</style>
+
+<script>
+  interface Entry {
+    id: string;
+    title: string;
+    tags: string[];
+    category: string | null;
+    date: string;
+  }
+
+  (function () {
+    const btn = document.getElementById('search-open');
+    const dlg = document.getElementById(
+      'search-dialog',
+    ) as HTMLDialogElement | null;
+    const input = document.getElementById(
+      'search-input',
+    ) as HTMLInputElement | null;
+    const list = document.getElementById('search-results');
+    if (!btn || !dlg || !input || !list) return;
+    // 守卫后重新绑定：闭包里不继承外部的控制流窄化
+    const openBtn = btn;
+    const dialog = dlg;
+    const field = input;
+    const results = list;
+
+    // 索引懒加载：第一次点开搜索才去取 JSON
+    let data: Entry[] | null = null;
+    async function load(): Promise<Entry[]> {
+      if (data) return data;
+      const r = await fetch('/search-index.json');
+      data = (await r.json()) as Entry[];
+      return data;
+    }
+
+    // 子串匹配标题/分类/标签，中文天然按字匹配
+    function render() {
+      results.textContent = '';
+      const q = field.value.trim().toLowerCase();
+      if (!q || !data) return;
+
+      const hits = data
+        .filter(
+          (p) =>
+            p.title.toLowerCase().indexOf(q) !== -1 ||
+            (p.category || '').toLowerCase().indexOf(q) !== -1 ||
+            p.tags.some((t) => t.toLowerCase().indexOf(q) !== -1),
+        )
+        .slice(0, 10);
+
+      if (!hits.length) {
+        const empty = document.createElement('li');
+        empty.className = 'muted';
+        empty.textContent = 'no matches — try another word';
+        results.appendChild(empty);
+        return;
+      }
+
+      hits.forEach((p) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `/posts/${p.id}/`;
+        a.textContent = p.title;
+        const when = document.createElement('span');
+        when.className = 'when faint';
+        when.textContent = p.date;
+        li.appendChild(a);
+        li.appendChild(when);
+        results.appendChild(li);
+      });
+    }
+
+    openBtn.addEventListener('click', () => {
+      dialog.showModal();
+      field.focus();
+      load().then(render);
+    });
+    field.addEventListener('input', render);
+    // 点遮罩关闭；Esc 由 <dialog> 原生处理
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  })();
+</script>
