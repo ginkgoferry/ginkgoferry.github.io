@@ -3,6 +3,10 @@ import { GISCUS } from '../consts';
 
 // repo 留空 = 关闭评论，整个组件不渲染任何东西
 const enabled = Boolean(GISCUS.repo);
+
+// 自定义主题：public/ 下的两个 css（纸面/黑板），giscus 要求绝对 URL
+const themeLight = new URL('giscus-light.css', Astro.site).href;
+const themeDark = new URL('giscus-dark.css', Astro.site).href;
 ---
 
 {
@@ -16,6 +20,8 @@ const enabled = Boolean(GISCUS.repo);
         data-repo-id={GISCUS.repoId}
         data-category={GISCUS.category}
         data-category-id={GISCUS.categoryId}
+        data-theme-light={themeLight}
+        data-theme-dark={themeDark}
       ></div>
     </section>
   )
@@ -28,10 +34,11 @@ const enabled = Boolean(GISCUS.repo);
         var box = document.querySelector('.giscus');
         if (!box) return;
 
+        // 自定义主题：传 css 的 URL，而不是 giscus 内置主题名
         var theme = function () {
           return document.documentElement.dataset.theme === 'dark'
-            ? 'dark_dimmed'
-            : 'light';
+            ? box.dataset.themeDark
+            : box.dataset.themeLight;
         };
 
         var s = document.createElement('script');

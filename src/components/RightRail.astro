@@ -2,6 +2,13 @@
 import Doodle from './Doodle.astro';
 import { formatChars, getSiteStats, getSortedPosts } from '../utils/posts';
 
+interface Props {
+  /** 首页主栏已有 recently scribbled，传 false 收起这栏避免重复 */
+  showRecent?: boolean;
+}
+
+const { showRecent = true } = Astro.props;
+
 const stats = await getSiteStats();
 const posts = await getSortedPosts();
 const recent = posts.slice(0, 5);
@@ -39,22 +46,26 @@ const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
   </div>
 </section>
 
-<section>
-  <h2 class="rail-title">recently scribbled</h2>
-  <span class="squiggle"></span>
-  <ul class="checklist">
-    {
-      recent.map((post) => (
-        <li>
-          <a href={`/posts/${post.id}/`}>
-            <Doodle name="check" class="box" />
-            {post.data.title}
-          </a>
-        </li>
-      ))
-    }
-  </ul>
-</section>
+{
+  showRecent && (
+    <section>
+      <h2 class="rail-title">recently scribbled</h2>
+      <span class="squiggle"></span>
+      <ul class="checklist">
+        {
+          recent.map((post) => (
+            <li>
+              <a href={`/posts/${post.id}/`}>
+                <Doodle name="check" class="box" />
+                {post.data.title}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  )
+}
 
 <section>
   <h2 class="rail-title">tag stickers</h2>

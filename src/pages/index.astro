@@ -41,7 +41,7 @@ const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
     recent.length > 0 && (
       <section class="recent">
         <h2 class="section-title">
-          recently written
+          recently scribbled
           <span class="squiggle"></span>
         </h2>
         <div class="cards">
@@ -59,7 +59,7 @@ const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
   }
 
   <Fragment slot="rail">
-    <RightRail />
+    <RightRail showRecent={false} />
   </Fragment>
 </BaseLayout>
 

@@ -1,0 +1,111 @@
+/* giscus 自定义主题 · 纸面版
+   颜色取自本站亮色设计系统（src/styles/global.css）：
+   米色纸 + 墨色字 + 马克笔蓝强调，让评论区融进手账而不是贴一张 GitHub 灰纸。
+   用法：Comments.astro 里 data-theme 直接指向本文件的 URL。 */
+
+main {
+  /* giscus 自有变量 */
+  --primary-color: #33707e;
+  --secondary-color: #f1ead9;
+  --tertiary-color: #faf6ec;
+  --primary-text-color: #3a3226;
+  --secondary-text-color: #6b6152;
+  --tertiary-text-color: #7d7159;
+  --primary-border-color: #b3a689;
+  --secondary-border-color: #d9cfb8;
+  --tertiary-border-color: #d9cfb8;
+
+  /* GitHub Primer 变量（giscus 内部组件读这些） */
+  --color-scale-black: #3a3226;
+  --color-scale-white: #fffdf6;
+
+  --color-canvas-default: #faf6ec;
+  --color-canvas-subtle: #f1ead9;
+  --color-canvas-overlay: #fffdf6;
+
+  --color-neutral-muted: rgba(58, 50, 38, 0.12);
+  --color-neutral-subtle: rgba(58, 50, 38, 0.06);
+
+  --color-accent-fg: #33707e;
+  --color-accent-emphasis: #33707e;
+  --color-accent-muted: rgba(51, 112, 126, 0.4);
+  --color-accent-subtle: rgba(51, 112, 126, 0.1);
+
+  --color-success-fg: #6a7f4f;
+  --color-success-emphasis: #6a7f4f;
+  --color-success-muted: rgba(106, 127, 79, 0.4);
+  --color-success-subtle: rgba(106, 127, 79, 0.12);
+
+  --color-attention-fg: #d9a13b;
+  --color-attention-emphasis: #d9a13b;
+  --color-attention-muted: rgba(217, 161, 59, 0.4);
+  --color-attention-subtle: rgba(217, 161, 59, 0.15);
+
+  --color-danger-fg: #c8502e;
+  --color-danger-emphasis: #c8502e;
+  --color-danger-muted: rgba(200, 80, 46, 0.4);
+  --color-danger-subtle: rgba(200, 80, 46, 0.1);
+
+  --color-fg-default: #3a3226;
+  --color-fg-muted: #6b6152;
+  --color-fg-subtle: #7d7159;
+
+  --color-border-default: #d9cfb8;
+  --color-border-muted: #d9cfb8;
+  --color-border-subtle: #e8e0cd;
+
+  --color-primer-shadow-focus: 0 0 0 3px rgba(51, 112, 126, 0.3);
+  --color-primer-shadow-inset: inset 0 1px 0 rgba(58, 50, 38, 0.04);
+
+  /* 按钮 */
+  --color-btn-bg: #fffdf6;
+  --color-btn-border: #d9cfb8;
+  --color-btn-text: #3a3226;
+  --color-btn-hover-bg: #f1ead9;
+  --color-btn-hover-border: #b3a689;
+  --color-btn-active-bg: #ece3cf;
+  --color-btn-active-border: #b3a689;
+  --color-btn-selected-bg: #ece3cf;
+  --color-btn-counter-bg: #d9cfb8;
+
+  --color-btn-primary-bg: #33707e;
+  --color-btn-primary-border: rgba(58, 50, 38, 0.15);
+  --color-btn-primary-text: #faf6ec;
+  --color-btn-primary-hover-bg: #2b5e6a;
+  --color-btn-primary-disabled-bg: rgba(51, 112, 126, 0.5);
+  --color-btn-primary-disabled-border: transparent;
+  --color-btn-primary-disabled-text: rgba(250, 246, 236, 0.7);
+
+  /* 输入框 / 标签 / 代码 / 提示条 */
+  --color-input-disabled-bg: rgba(58, 50, 38, 0.04);
+  --color-label-border: #d9cfb8;
+  --color-label-bg: #f1ead9;
+  --color-label-text: #6b6152;
+  --color-markdown-code-bg: rgba(58, 50, 38, 0.08);
+  --color-checks-dropdown-text: #6b6152;
+
+  --color-alert-info-bg: rgba(51, 112, 126, 0.1);
+  --color-alert-info-border: rgba(51, 112, 126, 0.4);
+  --color-alert-info-text: #33707e;
+  --color-alert-warn-bg: rgba(217, 161, 59, 0.15);
+  --color-alert-warn-border: rgba(217, 161, 59, 0.4);
+  --color-alert-warn-text: #8a6420;
+  --color-alert-error-bg: rgba(200, 80, 46, 0.1);
+  --color-alert-error-border: rgba(200, 80, 46, 0.4);
+  --color-alert-error-text: #c8502e;
+
+  --color-segmented-control-button-bg: #fffdf6;
+  --color-segmented-control-button-selected-border: #b3a689;
+
+  /* 表情回应气泡 */
+  --color-social-reaction-bg-hover: rgba(51, 112, 126, 0.1);
+  --color-social-reaction-bg-reacted-hover: rgba(51, 112, 126, 0.2);
+}
+
+main .pagination-loader-container {
+  background-image: none;
+}
+
+main .gsc-loading-image {
+  background-image: none;
+}
