@@ -11,7 +11,7 @@
 //   - Typora 的绝对路径图片（含文件名里的窄空格）→ 拷进 public/images/<slug>/ 并改写引用
 //   - PNG/JPEG 自动转 WebP（依赖 sharp，转不了就原样保留）
 //   - > [!NOTE] 等 callout → 普通引用
-//   - 生成 frontmatter（title/description/pubDate/tags）
+//   - 生成 frontmatter（title/pubDate/tags；分享卡片和 SEO 用标题）
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -37,12 +37,11 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--title') opts.title = argv[++i];
   else if (a === '--slug') opts.slug = argv[++i];
   else if (a === '--date') opts.date = argv[++i];
-  else if (a === '--desc') opts.desc = argv[++i];
   else if (a === '--push') opts.push = true;
   else if (a === '--force') opts.force = true;
   else if (a === '--draft') opts.draft = true;
   else if (a === '--help' || a === '-h') {
-    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--date YYYY-MM-DD] [--desc 摘要] [--draft] [--push] [--force]');
+    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--date YYYY-MM-DD] [--draft] [--push] [--force]');
     process.exit(0);
   } else files.push(a);
 }
@@ -155,23 +154,13 @@ for (const file of files) {
   src = src.replace(/^>\s*\[!\w+\]\s*\n>\s*\n/gm, '');
   src = src.replace(/^>\s*\[!\w+\]\s*\n/gm, '');
 
-  // ---------- 摘要：第一段普通文字（跳过标题/引用/图片/列表/编号行） ----------
-  let desc = opts.desc;
-  if (!desc) {
-    const line = src
-      .split('\n')
-      .map((l) => l.trim())
-      .find((l) => l && !/^[#>!`[-]/.test(l) && !/^\d+[.、)）]/.test(l) && !/^</.test(l));
-    desc = line ? line.replace(/[*_`]/g, '').slice(0, 60) : title;
-  }
-
   const pubDate = opts.date ?? new Date().toISOString().slice(0, 10);
 
   let fm;
   if (existingFm) {
     fm = existingFm;
   } else {
-    fm = `---\ntitle: ${q(title)}\ndescription: ${q(desc)}\npubDate: ${pubDate}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
+    fm = `---\ntitle: ${q(title)}\npubDate: ${pubDate}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
   }
 
   // 覆盖已有文章时自动盖一个「更新于」，页面上会显示 updated 日期

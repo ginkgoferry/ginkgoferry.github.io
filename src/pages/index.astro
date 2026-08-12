@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import RightRail from '../components/RightRail.astro';
 import Doodle from '../components/Doodle.astro';
-import { FOCUS_TAGS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { FOCUS_TAGS, SITE_TITLE } from '../consts';
 import { getSortedPosts } from '../utils/posts';
 
 const posts = await getSortedPosts();
@@ -12,7 +12,7 @@ const recent = posts.slice(0, 3);
 const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
 ---
 
-<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+<BaseLayout title={SITE_TITLE}>
   <section class="hero">
     <p class="eyebrow">
       <Doodle name="arrow" class="arrow" />

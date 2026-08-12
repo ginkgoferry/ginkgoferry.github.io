@@ -1,5 +1,4 @@
 export const SITE_TITLE = 'ginkgoferry';
-export const SITE_DESCRIPTION = 'A hand-drawn notebook about code and everything else.';
 export const AUTHOR = 'ginkgoferry';
 // UI 文案用英文；文章内容（中文）由霞鹜文楷接管
 export const LOCALE = 'en-US';

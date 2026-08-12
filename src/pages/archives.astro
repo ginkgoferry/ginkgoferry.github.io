@@ -15,7 +15,7 @@ const byYear = posts.reduce<Map<number, typeof posts>>((acc, post) => {
 const years = [...byYear.keys()].sort((a, b) => b - a);
 ---
 
-<BaseLayout title="archives" description="All posts, bound by year.">
+<BaseLayout title="archives">
   <h1><span class="underline-rough">archives</span></h1>
   <p class="muted count">bound by year · {posts.length} pages</p>
 

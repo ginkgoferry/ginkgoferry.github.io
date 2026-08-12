@@ -25,7 +25,7 @@ export async function getStaticPaths() {
 const { tag, posts } = Astro.props;
 ---
 
-<BaseLayout title={`#${tag}`} description={`All posts under the ${tag} sticker.`}>
+<BaseLayout title={`#${tag}`}>
   <h1>
     <span class="sticker" style="color: var(--red); --tilt: -1.5deg">#{tag}</span>
   </h1>

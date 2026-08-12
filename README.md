@@ -35,9 +35,9 @@ The script handles:
 
 - Typora absolute-path images (including narrow no-break spaces in filenames) — copied to `public/images/<slug>/` with references rewritten, and PNG/JPEG converted to WebP automatically
 - `[!NOTE]`-style callouts — converted to plain blockquotes
-- Frontmatter generation — title from the first `#` heading or the filename, date defaults to today, description from the first paragraph
+- Frontmatter generation — title from the first `#` heading or the filename, date defaults to today
 
-`--slug`, `--desc`, and `--force` override defaults. Existing posts are never overwritten without `--force`.
+`--slug` and `--force` override defaults. Existing posts are never overwritten without `--force`.
 
 ### Option 2: write by hand
 
@@ -46,7 +46,6 @@ Create a `.md` file in `src/content/posts/`; the filename is the URL (`my-post.m
 ```yaml
 ---
 title: 'Post title'
-description: 'One-line summary used on list pages and in search results'
 pubDate: 2026-08-11
 tags: ['astro']
 draft: false # true keeps the post local-only

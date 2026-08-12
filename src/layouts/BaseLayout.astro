@@ -10,19 +10,18 @@ import Footer from '../components/Footer.astro';
 
 interface Props {
   title: string;
-  description: string;
   type?: 'website' | 'article';
   /** 文章页正文是中文，传 'zh-CN' */
   lang?: string;
 }
 
-const { title, description, type, lang = 'en-US' } = Astro.props;
+const { title, type, lang = 'en-US' } = Astro.props;
 ---
 
 <!doctype html>
 <html lang={lang}>
   <head>
-    <BaseHead title={title} description={description} type={type} />
+    <BaseHead title={title} type={type} />
     <script is:inline>
       // 首屏之前定好主题：手动切过听 localStorage，否则跟随系统。
       const stored = localStorage.getItem('theme');

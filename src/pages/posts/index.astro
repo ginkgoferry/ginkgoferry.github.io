@@ -7,7 +7,7 @@ import { getSortedPosts } from '../../utils/posts';
 const posts = await getSortedPosts();
 ---
 
-<BaseLayout title="posts" description="Every post, pinned here one note at a time.">
+<BaseLayout title="posts">
   <h1><span class="underline-rough">posts</span></h1>
   <p class="muted count">{posts.length} notes in total</p>
 
