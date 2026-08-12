@@ -1,22 +1,33 @@
 ---
-import type { CollectionEntry, GetStaticPaths } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import PostCard from '../../../components/PostCard.astro';
 import RightRail from '../../../components/RightRail.astro';
 import Pagination from '../../../components/Pagination.astro';
 import { getSortedPosts, POSTS_PER_PAGE } from '../../../utils/posts';
 
-interface PageProps {
-  page: {
-    data: CollectionEntry<'posts'>[];
-    currentPage: number;
-    lastPage: number;
-    urlPrev?: string;
-    urlNext?: string;
-  };
+interface PageInfo {
+  data: CollectionEntry<'posts'>[];
+  currentPage: number;
+  lastPage: number;
+  urlPrev?: string;
+  urlNext?: string;
 }
 
-export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+interface PaginateEntry {
+  params: { page?: string };
+  props: { page: PageInfo };
+}
+
+// 不用 astro:content 的 GetStaticPaths 类型（当前版本未导出），自含式声明
+export async function getStaticPaths({
+  paginate,
+}: {
+  paginate: (
+    items: CollectionEntry<'posts'>[],
+    opts: { pageSize: number },
+  ) => PaginateEntry[];
+}) {
   const posts = await getSortedPosts();
   // 第 1 页由 /posts/index.astro 渲染，这里只生成第 2 页起；
   // 第 2 页的 prev 指回 /posts/ 而不是 /posts/page/1/
@@ -26,9 +37,9 @@ export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
       if (entry.props.page.currentPage === 2) entry.props.page.urlPrev = '/posts/';
       return entry;
     });
-};
+}
 
-const { page } = Astro.props as PageProps;
+const { page } = Astro.props as { page: PageInfo };
 ---
 
 <BaseLayout title={`posts · page ${page.currentPage}`}>

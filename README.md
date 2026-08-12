@@ -16,7 +16,7 @@ npm run check    # type check
 
 ## First-time setup
 
-In the GitHub repository, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions** (not "Deploy from a branch"). Every push to `main` then builds and deploys automatically; progress is shown on the Actions tab.
+In the GitHub repository, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions** (not "Deploy from a branch"). Every push to `main` then builds and deploys automatically; progress is shown on the Actions tab. The workflow runs `npm run check` before building, so type errors fail the deploy instead of shipping.
 
 ## Publishing a post
 
