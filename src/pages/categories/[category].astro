@@ -1,0 +1,61 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import RightRail from '../../components/RightRail.astro';
+import { getCategories } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const cats = await getCategories();
+
+  return cats.map((cat) => ({
+    params: { category: cat.name },
+    props: { cat },
+  }));
+}
+
+const { cat } = Astro.props as { cat: { name: string; posts: CollectionEntry<'posts'>[] } };
+---
+
+<BaseLayout title={`§ ${cat.name}`}>
+  <h1>
+    <span class="sticker" style="color: var(--blue); --tilt: -1.5deg">
+      § {cat.name}
+    </span>
+  </h1>
+  <p class="muted count">
+    {cat.posts.length} {cat.posts.length === 1 ? 'post' : 'posts'} on this shelf
+  </p>
+
+  <div class="cards">
+    {cat.posts.map((post, i) => <PostCard post={post} index={i} />)}
+  </div>
+
+  <p class="back">
+    <a href="/categories/">← back to the shelves</a>
+  </p>
+
+  <Fragment slot="rail">
+    <RightRail />
+  </Fragment>
+</BaseLayout>
+
+<style>
+  .count {
+    margin: 1.25rem 0 0;
+  }
+
+  .cards {
+    display: grid;
+    gap: 2.2rem;
+    margin-top: 2.5rem;
+  }
+
+  .back {
+    margin-top: 3rem;
+  }
+
+  .back a {
+    color: var(--red);
+  }
+</style>

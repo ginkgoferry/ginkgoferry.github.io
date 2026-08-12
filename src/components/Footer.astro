@@ -1,5 +1,5 @@
 ---
-import { AUTHOR } from '../consts';
+import { AUTHOR, GOATCOUNTER_ID } from '../consts';
 
 const year = new Date().getFullYear();
 ---
@@ -7,10 +7,46 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <span class="squiggle"></span>
   <p>© {year} {AUTHOR}. Some rights reserved.</p>
+  {
+    GOATCOUNTER_ID && (
+      <p class="gc faint">
+        <span id="gc-total" hidden data-code={GOATCOUNTER_ID}></span>
+        <a href={`https://${GOATCOUNTER_ID}.goatcounter.com/`} rel="noopener">
+          stats by GoatCounter
+        </a>
+      </p>
+    )
+  }
 </footer>
+
+{
+  GOATCOUNTER_ID && (
+    <script is:inline>
+      (function () {
+        var el = document.getElementById('gc-total');
+        if (!el) return;
+        fetch(
+          'https://' + el.dataset.code + '.goatcounter.com/counter/TOTAL.json',
+        )
+          .then(function (r) {
+            return r.ok ? r.json() : Promise.reject();
+          })
+          .then(function (d) {
+            el.hidden = false;
+            el.textContent = d.count + ' views in total · ';
+          })
+          .catch(function () {});
+      })();
+    </script>
+  )
+}
 
 <style>
   p {
     margin: 0;
+  }
+
+  .gc {
+    margin-top: 0.4rem;
   }
 </style>

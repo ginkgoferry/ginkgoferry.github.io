@@ -27,6 +27,7 @@ Run `npm run publish -- `, drag the `.md` file into the terminal (the path is in
 ```bash
 npm run publish -- ~/Notes/post.md                          # convert and write to src/content/posts/
 npm run publish -- ~/Notes/post.md --tags 'os,concurrency'  # with tags
+npm run publish -- ~/Notes/post.md --category 'os'          # main category (shows on /categories/)
 npm run publish -- ~/Notes/post.md --title 'Title' --date 2026-08-11
 npm run publish -- ~/Notes/post.md --push                   # convert, then git add/commit/push in one step
 ```
@@ -47,6 +48,7 @@ Create a `.md` file in `src/content/posts/`; the filename is the URL (`my-post.m
 ---
 title: 'Post title'
 pubDate: 2026-08-11
+category: os # optional; one main category per post, listed on /categories/
 tags: ['astro']
 draft: false # true keeps the post local-only
 ---
@@ -66,6 +68,13 @@ Images go in `public/images/<slug>/` and are referenced by site-root path: `![al
 | Top bar / sidebar / footer | `src/components/TopBar.astro`, `Sidebar.astro`, `Footer.astro` |
 
 Colors are defined once as CSS variables at the top of `global.css`; each theme (light/dark) changes in a single place.
+
+## Analytics & comments (optional, off by default)
+
+Both are configured in `src/consts.ts` and stay completely off while their values are empty:
+
+- **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
+- **Giscus** (`GISCUS`): GitHub-Discussions-powered comments under each post, theme-synced with the site. Requires enabling Discussions on the repository and installing the giscus app; the four config values come from giscus.app.
 
 ## Custom domain
 
@@ -89,4 +98,4 @@ src/
 └── content.config.ts  # post frontmatter schema
 ```
 
-The site ships with a sitemap, tag pages, an archive timeline, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Apart from the theme toggle and a few lines for the floating TOC on narrow screens, the pages contain no JavaScript, no analytics, and no tracking.
+The site ships with a sitemap, category shelves, tag pages, an archive timeline, pagination, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are JavaScript-free unless the optional GoatCounter/Giscus integrations are enabled in `src/consts.ts`.

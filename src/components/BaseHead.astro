@@ -1,5 +1,5 @@
 ---
-import { SITE_TITLE, LOCALE } from '../consts';
+import { SITE_TITLE, LOCALE, GOATCOUNTER_ID } from '../consts';
 import '../styles/global.css';
 
 interface Props {
@@ -41,3 +41,14 @@ const ogImage = new URL('/og-card.png', Astro.site);
 <meta name="twitter:image" content={ogImage} />
 
 <meta name="generator" content={Astro.generator} />
+
+{
+  GOATCOUNTER_ID && (
+    <script
+      is:inline
+      data-goatcounter={`https://${GOATCOUNTER_ID}.goatcounter.com/count`}
+      async
+      src="//gc.zgo.at/count.js"
+    ></script>
+  )
+}

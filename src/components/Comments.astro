@@ -1,0 +1,86 @@
+---
+import { GISCUS } from '../consts';
+
+// repo 留空 = 关闭评论，整个组件不渲染任何东西
+const enabled = Boolean(GISCUS.repo);
+---
+
+{
+  enabled && (
+    <section class="comments">
+      <h2>comments</h2>
+      <span class="squiggle"></span>
+      <div
+        class="giscus"
+        data-repo={GISCUS.repo}
+        data-repo-id={GISCUS.repoId}
+        data-category={GISCUS.category}
+        data-category-id={GISCUS.categoryId}
+      ></div>
+    </section>
+  )
+}
+
+{
+  enabled && (
+    <script is:inline>
+      (function () {
+        var box = document.querySelector('.giscus');
+        if (!box) return;
+
+        var theme = function () {
+          return document.documentElement.dataset.theme === 'dark'
+            ? 'dark_dimmed'
+            : 'light';
+        };
+
+        var s = document.createElement('script');
+        s.src = 'https://giscus.app/client.js';
+        s.setAttribute('data-repo', box.dataset.repo);
+        s.setAttribute('data-repo-id', box.dataset.repoId);
+        s.setAttribute('data-category', box.dataset.category);
+        s.setAttribute('data-category-id', box.dataset.categoryId);
+        s.setAttribute('data-mapping', 'pathname');
+        s.setAttribute('data-strict', '0');
+        s.setAttribute('data-reactions-enabled', '1');
+        s.setAttribute('data-emit-metadata', '0');
+        s.setAttribute('data-input-position', 'bottom');
+        s.setAttribute('data-theme', theme());
+        s.setAttribute('data-lang', 'zh-CN');
+        s.setAttribute('data-loading', 'lazy');
+        s.async = true;
+        box.appendChild(s);
+
+        // 切换黑板/纸面主题时，通知 giscus iframe 跟着换
+        new MutationObserver(function () {
+          var frame = box.querySelector('iframe.giscus-frame');
+          if (frame) {
+            frame.contentWindow.postMessage(
+              { giscus: { setConfig: { theme: theme() } } },
+              'https://giscus.app',
+            );
+          }
+        }).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+      })();
+    </script>
+  )
+}
+
+<style>
+  .comments {
+    margin-top: 4rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin: 0;
+  }
+
+  .squiggle {
+    color: var(--line-strong);
+    margin: 0.5rem 0 1.5rem;
+  }
+</style>

@@ -1,0 +1,67 @@
+---
+interface Props {
+  page: {
+    currentPage: number;
+    lastPage: number;
+    urlPrev?: string;
+    urlNext?: string;
+  };
+}
+
+const { page } = Astro.props;
+---
+
+{
+  page.lastPage > 1 && (
+    <nav class="pagination" aria-label="posts pages">
+      {
+        page.urlPrev ? (
+          <a class="pg-btn wobble-a" href={page.urlPrev}>← prev</a>
+        ) : (
+          <span class="ghost" aria-hidden="true"></span>
+        )
+      }
+      <span class="faint">
+        page {page.currentPage} of {page.lastPage}
+      </span>
+      {
+        page.urlNext ? (
+          <a class="pg-btn wobble-b" href={page.urlNext}>next →</a>
+        ) : (
+          <span class="ghost" aria-hidden="true"></span>
+        )
+      }
+    </nav>
+  )
+}
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+    margin-top: 3.25rem;
+  }
+
+  .pg-btn {
+    display: inline-block;
+    padding: 0.25rem 1.2rem;
+    border: 1.6px solid var(--line-strong);
+    background: var(--card);
+    box-shadow: 2px 3px 0 var(--shadow);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  .pg-btn:hover {
+    color: var(--red);
+    transform: translateY(-2px);
+  }
+
+  .ghost {
+    display: inline-block;
+    width: 4.5rem;
+  }
+</style>

@@ -4,7 +4,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import TocRail from '../../components/TocRail.astro';
 import TocFab from '../../components/TocFab.astro';
-import { getSortedPosts, readingTime } from '../../utils/posts';
+import Comments from '../../components/Comments.astro';
+import { GOATCOUNTER_ID } from '../../consts';
+import { getSortedPosts, readingTime, wordCount, formatChars } from '../../utils/posts';
 
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
@@ -22,6 +24,7 @@ export async function getStaticPaths() {
 const { post, newer, older } = Astro.props;
 const { Content, headings } = await render(post);
 const minutes = readingTime(post.body);
+const words = wordCount(post.body);
 ---
 
 <BaseLayout
@@ -33,8 +36,26 @@ const minutes = readingTime(post.body);
     <header>
       <h1><span class="underline-rough">{post.data.title}</span></h1>
       <p class="meta faint">
+        {
+          post.data.category && (
+            <a class="cat" href={`/categories/${post.data.category}/`}>
+              § {post.data.category}
+            </a>
+          )
+        }
         <FormattedDate date={post.data.pubDate} />
         <span>{minutes} min read</span>
+        <span>{formatChars(words)} words</span>
+        {
+          GOATCOUNTER_ID && (
+            <span
+              id="gc-views"
+              hidden
+              data-code={GOATCOUNTER_ID}
+              data-path={Astro.url.pathname.replace(/\/$/, '')}
+            ></span>
+          )
+        }
         {post.data.updatedDate && (
           <span>
             updated <FormattedDate date={post.data.updatedDate} compact />
@@ -84,6 +105,34 @@ const minutes = readingTime(post.body);
     }
   </nav>
 
+  <Comments />
+
+  {
+    GOATCOUNTER_ID && (
+      <script is:inline>
+        (function () {
+          var el = document.getElementById('gc-views');
+          if (!el) return;
+          fetch(
+            'https://' +
+              el.dataset.code +
+              '.goatcounter.com/counter/' +
+              encodeURIComponent(el.dataset.path) +
+              '.json',
+          )
+            .then(function (r) {
+              return r.ok ? r.json() : Promise.reject();
+            })
+            .then(function (d) {
+              el.hidden = false;
+              el.textContent = d.count + ' views';
+            })
+            .catch(function () {});
+        })();
+      </script>
+    )
+  }
+
   <TocFab headings={headings} />
 
   <Fragment slot="rail">
@@ -107,6 +156,18 @@ const minutes = readingTime(post.body);
     flex-wrap: wrap;
     gap: 0.35rem 1.1rem;
     margin: 1.1rem 0 0;
+  }
+
+  .meta .cat {
+    color: var(--blue);
+    text-decoration: none;
+    background: color-mix(in srgb, var(--blue) 10%, transparent);
+    border-radius: 0.5em 0.2em 0.6em 0.3em;
+    padding: 0.05em 0.4em;
+  }
+
+  .meta .cat:hover {
+    color: var(--red);
   }
 
   .tags {

@@ -4,6 +4,7 @@
 // 用法（在终端里敲 `npm run publish -- ` 后把 .md 文件拖进窗口即可）：
 //   npm run publish -- ~/Notes/xxx.md                     转换并写入 src/content/posts/
 //   npm run publish -- ~/Notes/xxx.md --tags '操作系统,并发'  带标签
+//   npm run publish -- ~/Notes/xxx.md --category '操作系统'   主分类（/categories/ 书架）
 //   npm run publish -- ~/Notes/xxx.md --title '标题'        指定标题（默认取首个 # 或文件名）
 //   npm run publish -- ~/Notes/xxx.md --push              转换后 git add/commit/push 上线
 //
@@ -30,7 +31,7 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 // ---------- 参数 ----------
 const argv = process.argv.slice(2);
 const files = [];
-const opts = { tags: [], push: false, force: false, draft: false };
+const opts = { tags: [], push: false, force: false, draft: false, category: '' };
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (a === '--tags') opts.tags = (argv[++i] ?? '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
@@ -40,8 +41,9 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--push') opts.push = true;
   else if (a === '--force') opts.force = true;
   else if (a === '--draft') opts.draft = true;
+  else if (a === '--category') opts.category = argv[++i] ?? '';
   else if (a === '--help' || a === '-h') {
-    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--date YYYY-MM-DD] [--draft] [--push] [--force]');
+    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--category 分类] [--date YYYY-MM-DD] [--draft] [--push] [--force]');
     process.exit(0);
   } else files.push(a);
 }
@@ -160,7 +162,7 @@ for (const file of files) {
   if (existingFm) {
     fm = existingFm;
   } else {
-    fm = `---\ntitle: ${q(title)}\npubDate: ${pubDate}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
+    fm = `---\ntitle: ${q(title)}\npubDate: ${pubDate}${opts.category ? `\ncategory: ${q(opts.category)}` : ''}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
   }
 
   // 覆盖已有文章时自动盖一个「更新于」，页面上会显示 updated 日期
@@ -174,7 +176,7 @@ for (const file of files) {
   fs.writeFileSync(postPath, fm + src.replace(/^\n+/, '\n'));
 
   console.log(`✅ 文章：${path.relative(ROOT, postPath)}${opts.draft ? '（草稿：本地可见，线上不发布）' : overwriting ? '（已覆盖，标记 updatedDate）' : ''}`);
-  console.log(`   标题：${title}　日期：${pubDate}　标签：${opts.tags.join(', ') || '（无）'}`);
+  console.log(`   标题：${title}　日期：${pubDate}　分类：${opts.category || '（无）'}　标签：${opts.tags.join(', ') || '（无）'}`);
   console.log(`   图片：${seen.size} 张 → public/images/${slug}/` + (webpCount ? `（${webpCount} 张已转 WebP）` : ''));
 
   // ---------- 上线 ----------

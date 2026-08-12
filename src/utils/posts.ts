@@ -53,3 +53,37 @@ export async function getSiteStats(): Promise<SiteStats> {
 export function formatChars(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 }
+
+/** 文章列表每页条数 */
+export const POSTS_PER_PAGE = 10;
+
+export interface CategoryInfo {
+  name: string;
+  posts: CollectionEntry<'posts'>[];
+}
+
+/** 按 category 汇总（每篇一个主分类），篇数多的排前面。 */
+export async function getCategories(): Promise<CategoryInfo[]> {
+  const posts = await getSortedPosts();
+  const map = new Map<string, CollectionEntry<'posts'>[]>();
+
+  for (const post of posts) {
+    const cat = post.data.category;
+    if (!cat) continue;
+    map.set(cat, [...(map.get(cat) ?? []), post]);
+  }
+
+  return [...map.entries()]
+    .map(([name, list]) => ({ name, posts: list }))
+    .sort((a, b) => b.posts.length - a.posts.length);
+}
+
+/** 字数：CJK 按字、西文按词，和 readingTime 同一套口径。 */
+export function wordCount(body: string | undefined): number {
+  if (!body) return 0;
+
+  const cjk = body.match(/[\u4e00-\u9fa5]/g)?.length ?? 0;
+  const words = body.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9]+/g)?.length ?? 0;
+
+  return cjk + words;
+}
