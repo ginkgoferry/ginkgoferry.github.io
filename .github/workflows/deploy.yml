@@ -30,6 +30,9 @@ jobs:
 
       - run: npm ci
 
+      # 类型检查先于构建：推了类型错误的代码会在这里红掉，而不是等本地发现
+      - run: npm run check
+
       - run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
