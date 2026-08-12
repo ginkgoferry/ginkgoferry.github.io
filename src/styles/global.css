@@ -688,20 +688,12 @@ h4 {
 }
 
 /* 代码块 = 贴进手账的打印纸：直角、白底，和周围的歪扭形成反差 */
-.prose pre {
+/* 外层 .pre-wrap 不裁剪，纸胶带挂在它上面；pre 自己 overflow-x 滚长行 */
+.prose .pre-wrap {
   position: relative;
-  margin-inline: -0.5rem;
-  padding: 1.1rem 1.2rem;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  box-shadow: 3px 4px 0 var(--shadow);
-  overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.7;
 }
 
-.prose pre::before {
+.prose .pre-wrap::before {
   content: '';
   position: absolute;
   top: -10px;
@@ -711,6 +703,19 @@ h4 {
   transform: rotate(-2deg);
   background: var(--tape);
   clip-path: polygon(0 6%, 5% 0, 95% 4%, 100% 10%, 98% 94%, 94% 100%, 4% 96%, 0 88%);
+  z-index: 1;
+}
+
+.prose pre {
+  margin-inline: -0.5rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 3px 4px 0 var(--shadow);
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
 }
 
 .prose img {
