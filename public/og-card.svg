@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- 手账风分享卡片：米色纸面 + 涂鸦 + 站点名 -->
+  <rect width="1200" height="630" fill="#f6f1e3"/>
+
+  <!-- 纸面暗纹点 -->
+  <g fill="#e8dfc8">
+    <circle cx="90" cy="80" r="3"/>
+    <circle cx="1110" cy="560" r="3"/>
+    <circle cx="1040" cy="90" r="2.5"/>
+    <circle cx="140" cy="540" r="2.5"/>
+    <circle cx="600" cy="40" r="2"/>
+    <circle cx="620" cy="595" r="2"/>
+  </g>
+
+  <!-- 左上：咖啡杯 -->
+  <g fill="none" stroke="#3c3830" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 122c30-3 62-3 92 0 2 26 2 52-2 76-28 4-58 4-86 0-4-24-6-50-4-76Z"/>
+    <path d="M188 138c16-2 28 6 27 20-1 14-14 22-30 22"/>
+    <path d="M122 96c-4-10 4-14 2-24M146 96c-4-10 4-14 2-24"/>
+  </g>
+
+  <!-- 右上：银杏叶 -->
+  <g fill="none" stroke="#7c8a4f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1074 148c-42-8-70-40-66-84 46-2 82 26 84 68"/>
+    <path d="M1078 152c-6-46 14-82 52-96 12 40-10 80-48 96"/>
+    <path d="M1076 152c0 18-2 34-8 48"/>
+  </g>
+
+  <!-- 左下：铅笔 -->
+  <g fill="none" stroke="#3c3830" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 486l8-28 84 62-8 28Z"/>
+    <path d="M188 520l74-16 8 28-74 16Z"/>
+    <path d="M262 504l52-12"/>
+    <path d="M96 486l-20 12 28-40"/>
+  </g>
+
+  <!-- 右下：小星星与云 -->
+  <g fill="none" stroke="#c4644f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1058 470l8 20 20 8-20 8-8 20-8-20-20-8 20-8Z"/>
+  </g>
+  <g fill="none" stroke="#3c3830" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1000 540c14-18 44-18 56-2 10-10 32-8 38 6"/>
+  </g>
+
+  <!-- 中间：便签卡片 -->
+  <g>
+    <rect x="330" y="170" width="540" height="290" rx="10" fill="#fbf7ec" stroke="#3c3830" stroke-width="5" transform="rotate(-0.8 600 315)"/>
+    <!-- 纸胶带 -->
+    <path d="M540 158l120-8 6 34-120 8Z" fill="#e4b7a2" opacity="0.85" transform="rotate(-2 600 175)"/>
+    <!-- 标题（手写体由系统楷体渲染；分享端只当图片抓取） -->
+    <text x="600" y="292" text-anchor="middle" font-family="'LXGW WenKai','Kaiti SC','STKaiti',serif" font-size="64" fill="#3c3830">ginkgoferry</text>
+    <text x="600" y="372" text-anchor="middle" font-family="'LXGW WenKai','Kaiti SC','STKaiti',serif" font-size="34" fill="#8a8272">sketchbook · code &amp; everyday</text>
+    <!-- 标题下的波浪线 -->
+    <path d="M470 316q20 8 40 0t40 0t40 0t40 0t40 0t40 0t40 0" fill="none" stroke="#c4644f" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

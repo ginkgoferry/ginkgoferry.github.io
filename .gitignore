@@ -16,3 +16,5 @@ pnpm-debug.log*
 .DS_Store
 # jetbrains setting folder
 .idea/
+# 本地故障排查备忘，不上传
+TROUBLESHOOTING.md
