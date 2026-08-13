@@ -6,6 +6,7 @@
 //   npm run publish -- ~/Notes/xxx.md --tags '操作系统,并发'  带标签
 //   npm run publish -- ~/Notes/xxx.md --category '操作系统'   主分类（/categories/ 书架）
 //   npm run publish -- ~/Notes/xxx.md --title '标题'        指定标题（默认取首个 # 或文件名）
+//   npm run publish -- ~/Notes/xxx.md --force --no-draft   覆盖草稿并改为正式发布
 //   npm run publish -- ~/Notes/xxx.md --push              转换后 git add/commit/push 上线
 //
 // 它会自动处理：
@@ -31,7 +32,10 @@ try {
   console.warn('⚠️ 未安装 sharp，图片将保持原格式（npm install -D sharp 即可启用 WebP 转换）');
 }
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+// 测试可把输出定向到临时站点；日常运行始终使用仓库根目录。
+const ROOT = process.env.BLOG_PUBLISH_ROOT
+  ? path.resolve(process.env.BLOG_PUBLISH_ROOT)
+  : path.resolve(new URL('..', import.meta.url).pathname);
 
 // ---------- 参数 ----------
 const argv = process.argv.slice(2);
@@ -59,12 +63,16 @@ for (let i = 0; i < argv.length; i++) {
     provided.add('draft');
     opts.draft = true;
   }
+  else if (a === '--no-draft') {
+    provided.add('draft');
+    opts.draft = false;
+  }
   else if (a === '--category') {
     provided.add('category');
     opts.category = argv[++i] ?? '';
   }
   else if (a === '--help' || a === '-h') {
-    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--category 分类] [--date YYYY-MM-DD] [--draft] [--push] [--force]');
+    console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--category 分类] [--date YYYY-MM-DD] [--draft | --no-draft] [--push] [--force]');
     process.exit(0);
   } else files.push(a);
 }
@@ -190,7 +198,7 @@ for (const file of files) {
     if (provided.has('pubDate')) updates.pubDate = opts.date;
     if (provided.has('category')) updates.category = opts.category ? q(opts.category) : null;
     if (provided.has('tags')) updates.tags = `[${opts.tags.map(q).join(', ')}]`;
-    if (provided.has('draft')) updates.draft = 'true';
+    if (provided.has('draft')) updates.draft = String(opts.draft);
     if (overwriting) updates.updatedDate = today;
     fm = updateFrontmatter(existingFm, updates);
   } else {

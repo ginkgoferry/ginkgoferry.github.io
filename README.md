@@ -12,11 +12,13 @@ npm run dev      # dev server with hot reload → http://localhost:4321
 npm run build    # build to dist/
 npm run preview  # preview the production build
 npm run check    # type check
+npm test         # publisher and content-check tests
+npm run check:content # verify post image references and slug uniqueness
 ```
 
 ## First-time setup
 
-In the GitHub repository, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions** (not "Deploy from a branch"). Every push to `main` then builds and deploys automatically; progress is shown on the Actions tab. The workflow runs `npm run check` before building, so type errors fail the deploy instead of shipping.
+In the GitHub repository, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions** (not "Deploy from a branch"). Every push to `main` then builds and deploys automatically; progress is shown on the Actions tab. Before building, the workflow runs publisher tests, content integrity checks, and Astro type checking, so broken posts do not ship.
 
 ## Publishing a post
 
@@ -29,6 +31,7 @@ npm run publish -- ~/Notes/post.md                          # convert and write 
 npm run publish -- ~/Notes/post.md --tags 'os,concurrency'  # with tags
 npm run publish -- ~/Notes/post.md --category 'os'          # main category (shows on /categories/)
 npm run publish -- ~/Notes/post.md --title 'Title' --date 2026-08-11
+npm run publish -- ~/Notes/post.md --slug post --force --no-draft # turn a draft into a published post
 npm run publish -- ~/Notes/post.md --push                   # convert, then git add/commit/push in one step
 ```
 
@@ -38,7 +41,7 @@ The script handles:
 - `[!NOTE]`-style callouts — converted to plain blockquotes
 - Frontmatter generation — title from the first `#` heading or the filename, date defaults to today
 
-`--slug` and `--force` override defaults. Existing posts are never overwritten without `--force`.
+`--slug` and `--force` override defaults. Existing posts are never overwritten without `--force`. Use `--draft` to keep a post local-only and `--no-draft` with `--force` to turn an existing draft into a published post. Overwriting a post refreshes its `updatedDate`.
 
 ### Option 2: write by hand
 
@@ -54,7 +57,7 @@ draft: false # true keeps the post local-only
 ---
 ```
 
-The schema is defined in `src/content.config.ts`; invalid frontmatter fails the build, so nothing broken reaches production.
+The schema is defined in `src/content.config.ts`; invalid frontmatter fails the build. CI also rejects missing local images and post slugs that differ only by letter case.
 
 Images go in `public/images/<slug>/` and are referenced by site-root path: `![alt](/images/pv/img-01.webp)`.
 
@@ -69,9 +72,9 @@ Images go in `public/images/<slug>/` and are referenced by site-root path: `![al
 
 Colors are defined once as CSS variables at the top of `global.css`; each theme (light/dark) changes in a single place.
 
-## Analytics & comments (optional, off by default)
+## Analytics & comments
 
-Both are configured in `src/consts.ts` and stay completely off while their values are empty:
+Both are configured in `src/consts.ts`. They are enabled in this repository; clearing the corresponding values disables them completely:
 
 - **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
 - **Giscus** (`GISCUS`): GitHub-Discussions-powered comments under each post, theme-synced with the site. Requires enabling Discussions on the repository and installing the giscus app; the four config values come from giscus.app.
@@ -107,4 +110,4 @@ src/
 └── content.config.ts  # post frontmatter schema
 ```
 
-The site ships with a sitemap, category shelves, tag pages, an archive timeline, pagination, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are JavaScript-free unless the optional GoatCounter/Giscus integrations are enabled in `src/consts.ts`.
+The site ships with a sitemap, RSS/Atom feeds, category shelves, tag pages, an archive timeline, pagination, search, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.
