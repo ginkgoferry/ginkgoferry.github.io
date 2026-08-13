@@ -11,14 +11,14 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 {
   items.length > 0 && (
-    <section>
-      <h2 class="rail-title">on this page</h2>
+    <section aria-labelledby="toc-title">
+      <h2 id="toc-title" class="rail-title">on this page</h2>
       <span class="squiggle"></span>
-      <ol class="toc">
+      <ol class="toc" data-toc-scroll>
         {
           items.map((h) => (
             <li class={h.depth === 3 ? 'sub' : undefined}>
-              <a href={`#${h.slug}`}>{h.text}</a>
+              <a href={`#${h.slug}`} data-toc-link>{h.text}</a>
             </li>
           ))
         }
@@ -27,13 +27,118 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   )
 }
 
+{
+  items.length > 0 && (
+    <script is:inline>
+      (function () {
+        var links = Array.from(document.querySelectorAll('[data-toc-link]'));
+        if (!links.length) return;
+
+        var headingById = new Map();
+        links.forEach(function (link) {
+          var raw = link.getAttribute('href') || '';
+          if (!raw.startsWith('#')) return;
+          var id = raw.slice(1);
+          try { id = decodeURIComponent(id); } catch (_) {}
+          if (!headingById.has(id)) headingById.set(id, document.getElementById(id));
+        });
+        var headings = Array.from(headingById.values()).filter(Boolean);
+        if (!headings.length) return;
+
+        var activeId = '';
+        var ticking = false;
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        function linkId(link) {
+          var raw = link.getAttribute('href') || '';
+          try { return decodeURIComponent(raw.slice(1)); } catch (_) { return raw.slice(1); }
+        }
+
+        function keepVisible(link) {
+          var scroller = link.closest('[data-toc-scroll]');
+          if (!scroller || scroller.offsetParent === null) return;
+          var item = link.closest('li') || link;
+          var box = scroller.getBoundingClientRect();
+          var rect = item.getBoundingClientRect();
+          var padding = 10;
+          var next = scroller.scrollTop;
+
+          if (rect.top < box.top + padding) next -= box.top + padding - rect.top;
+          else if (rect.bottom > box.bottom - padding) next += rect.bottom - box.bottom + padding;
+
+          if (next !== scroller.scrollTop) {
+            scroller.scrollTo({
+              top: next,
+              behavior: reduceMotion.matches ? 'auto' : 'smooth',
+            });
+          }
+        }
+
+        function select(id, reveal) {
+          if (!id) return;
+          activeId = id;
+          links.forEach(function (link) {
+            var current = linkId(link) === id;
+            if (current) {
+              link.setAttribute('aria-current', 'location');
+              if (reveal) keepVisible(link);
+            } else {
+              link.removeAttribute('aria-current');
+            }
+          });
+        }
+
+        function update(reveal) {
+          ticking = false;
+          var topbar = document.querySelector('.topbar');
+          var threshold = (topbar ? topbar.getBoundingClientRect().height : 48) + 32;
+          var current = headings[0];
+
+          for (var i = 0; i < headings.length; i += 1) {
+            if (headings[i].getBoundingClientRect().top <= threshold) current = headings[i];
+            else break;
+          }
+
+          if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            current = headings[headings.length - 1];
+          }
+          select(current.id, reveal || current.id !== activeId);
+        }
+
+        function schedule() {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(function () { update(true); });
+        }
+
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule);
+        window.addEventListener('hashchange', schedule);
+        document.querySelectorAll('.toc-fab').forEach(function (details) {
+          details.addEventListener('toggle', function () {
+            if (details.open) requestAnimationFrame(function () { update(true); });
+          });
+        });
+        links.forEach(function (link) {
+          link.addEventListener('click', function () {
+            select(linkId(link), true);
+          });
+        });
+        update(true);
+      })();
+    </script>
+  )
+}
+
 <style>
   .toc {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 0.35rem 0 1.25rem;
     font-size: 1rem;
     line-height: 1.6;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
   }
 
   .toc li + li {
@@ -46,6 +151,11 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
 
   .toc a {
+    position: relative;
+    display: block;
+    margin-right: 0.2rem;
+    padding: 0.08rem 0.35rem;
+    border-radius: 7px 3px 9px 4px / 4px 9px 3px 7px;
     text-decoration: none;
     color: var(--ink-soft);
   }
@@ -54,5 +164,18 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
     color: var(--red);
     text-decoration: underline;
     text-decoration-style: wavy;
+  }
+
+  .toc a[aria-current='location'] {
+    color: var(--ink);
+    background: var(--highlight);
+  }
+
+  .toc a[aria-current='location']::before {
+    content: '→';
+    position: absolute;
+    right: calc(100% + 0.25rem);
+    color: var(--red);
+    transform: rotate(-5deg);
   }
 </style>
