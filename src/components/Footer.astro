@@ -7,6 +7,9 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <span class="squiggle"></span>
   <p>© {year} {AUTHOR}. Some rights reserved.</p>
+  <p class="feeds faint">
+    subscribe via <a href="/rss.xml">RSS</a> · <a href="/atom.xml">Atom</a>
+  </p>
   {
     GOATCOUNTER_ID && (
       <p class="gc faint">
@@ -47,6 +50,10 @@ const year = new Date().getFullYear();
   }
 
   .gc {
+    margin-top: 0.4rem;
+  }
+
+  .feeds {
     margin-top: 0.4rem;
   }
 </style>

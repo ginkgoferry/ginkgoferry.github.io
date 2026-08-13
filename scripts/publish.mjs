@@ -17,6 +17,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import {
+  findMarkdownImages,
+  localDateString,
+  updateFrontmatter,
+} from './publish-utils.mjs';
 
 // 可选依赖：装了 sharp 就把 PNG/JPEG 转成 WebP，体积大约降到 1/5
 let sharp = null;
@@ -32,16 +37,32 @@ const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 const argv = process.argv.slice(2);
 const files = [];
 const opts = { tags: [], push: false, force: false, draft: false, category: '' };
+const provided = new Set();
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
-  if (a === '--tags') opts.tags = (argv[++i] ?? '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-  else if (a === '--title') opts.title = argv[++i];
+  if (a === '--tags') {
+    provided.add('tags');
+    opts.tags = (argv[++i] ?? '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+  }
+  else if (a === '--title') {
+    provided.add('title');
+    opts.title = argv[++i];
+  }
   else if (a === '--slug') opts.slug = argv[++i];
-  else if (a === '--date') opts.date = argv[++i];
+  else if (a === '--date') {
+    provided.add('pubDate');
+    opts.date = argv[++i];
+  }
   else if (a === '--push') opts.push = true;
   else if (a === '--force') opts.force = true;
-  else if (a === '--draft') opts.draft = true;
-  else if (a === '--category') opts.category = argv[++i] ?? '';
+  else if (a === '--draft') {
+    provided.add('draft');
+    opts.draft = true;
+  }
+  else if (a === '--category') {
+    provided.add('category');
+    opts.category = argv[++i] ?? '';
+  }
   else if (a === '--help' || a === '-h') {
     console.log('用法: npm run publish -- <笔记.md> [--title 标题] [--slug url名] [--tags a,b] [--category 分类] [--date YYYY-MM-DD] [--draft] [--push] [--force]');
     process.exit(0);
@@ -63,10 +84,12 @@ const slugify = (s) => {
 };
 
 // ---------- 转换单篇 ----------
+let failed = false;
 for (const file of files) {
   const abs = path.resolve(file);
   if (!fs.existsSync(abs)) {
     console.error(`❌ 找不到文件：${abs}`);
+    failed = true;
     continue;
   }
   let src = fs.readFileSync(abs, 'utf8');
@@ -97,6 +120,7 @@ for (const file of files) {
   const overwriting = fs.existsSync(postPath);
   if (overwriting && !opts.force) {
     console.error(`❌ 已存在 ${path.relative(ROOT, postPath)}，要覆盖请加 --force，或换 --slug`);
+    failed = true;
     continue;
   }
 
@@ -146,30 +170,31 @@ for (const file of files) {
     src = src.replace(mTag[0], `![${alt}](${url})`);
   }
   // ![alt](本地路径) → ![alt](/images/...)
-  const mdImgs = [...src.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)];
+  const mdImgs = findMarkdownImages(src);
   for (const mImg of mdImgs) {
-    const url = await migrate(mImg[2]);
-    if (url) src = src.replace(mImg[0], `![${mImg[1]}](${url})`);
+    const url = await migrate(mImg.destination);
+    if (url) src = src.replace(mImg.full, `![${mImg.alt}](${url})`);
   }
 
   // ---------- callout → 普通引用 ----------
   src = src.replace(/^>\s*\[!\w+\]\s*\n>\s*\n/gm, '');
   src = src.replace(/^>\s*\[!\w+\]\s*\n/gm, '');
 
-  const pubDate = opts.date ?? new Date().toISOString().slice(0, 10);
+  const today = localDateString();
+  const pubDate = opts.date ?? today;
 
   let fm;
   if (existingFm) {
-    fm = existingFm;
+    const updates = {};
+    if (provided.has('title')) updates.title = q(opts.title);
+    if (provided.has('pubDate')) updates.pubDate = opts.date;
+    if (provided.has('category')) updates.category = opts.category ? q(opts.category) : null;
+    if (provided.has('tags')) updates.tags = `[${opts.tags.map(q).join(', ')}]`;
+    if (provided.has('draft')) updates.draft = 'true';
+    if (overwriting) updates.updatedDate = today;
+    fm = updateFrontmatter(existingFm, updates);
   } else {
-    fm = `---\ntitle: ${q(title)}\npubDate: ${pubDate}${opts.category ? `\ncategory: ${q(opts.category)}` : ''}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
-  }
-
-  // 覆盖已有文章时自动盖一个「更新于」，页面上会显示 updated 日期
-  if (overwriting && !fm.includes('updatedDate:')) {
-    const NL = String.fromCharCode(10);
-    const today = new Date().toISOString().slice(0, 10);
-    fm = fm.replace(new RegExp('---' + NL + '?$'), `updatedDate: ${today}${NL}---${NL}`);
+    fm = `---\ntitle: ${q(title)}\npubDate: ${pubDate}${overwriting ? `\nupdatedDate: ${today}` : ''}${opts.category ? `\ncategory: ${q(opts.category)}` : ''}\ntags: [${opts.tags.map(q).join(', ')}]${opts.draft ? '\ndraft: true' : ''}\n---\n`;
   }
 
   fs.mkdirSync(path.dirname(postPath), { recursive: true });
@@ -190,8 +215,11 @@ for (const file of files) {
       console.log('🚀 已 push，等 Actions 部署完成即可上线');
     } catch {
       console.error('❌ push 失败，请手动 git add/commit/push');
+      failed = true;
     }
   } else {
     console.log('   预览：npm run dev → http://localhost:4321；满意后 git push 即上线（或加 --push）');
   }
 }
+
+if (failed) process.exitCode = 1;

@@ -1,7 +1,7 @@
 ---
 // 手绘涂鸦图标：全部是歪歪扭扭的线条 SVG，stroke 跟随 currentColor。
 interface Props {
-  name: 'arrow' | 'check' | 'github' | 'mail' | 'sun' | 'moon' | 'star' | 'pencil' | 'search';
+  name: 'arrow' | 'check' | 'close' | 'github' | 'mail' | 'sun' | 'moon' | 'star' | 'pencil' | 'search';
   class?: string;
 }
 
@@ -25,6 +25,12 @@ const { name, class: className } = Astro.props;
     <>
       <path d="M2.5 3.2c3.6-.5 7.3-.6 11-.3.3 3.4.3 6.8 0 10.1-3.7.3-7.4.3-11 0-.4-3.3-.4-6.5 0-9.8Z" />
       <path d="M5 8.2c1 1.2 1.8 2.3 2.5 3.4 1.2-2.6 2.6-4.8 4.3-6.6" />
+    </>
+  )}
+  {name === 'close' && (
+    <>
+      <path d="M3.7 3.5c2.8 2.9 5.7 5.8 8.7 8.9" />
+      <path d="M12.5 3.6c-3 3-5.9 5.9-8.9 8.7" />
     </>
   )}
   {name === 'github' && (

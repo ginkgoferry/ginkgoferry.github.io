@@ -1,6 +1,6 @@
 ---
 import Doodle from './Doodle.astro';
-import { formatChars, getSiteStats, getSortedPosts } from '../utils/posts';
+import { formatCount, getSiteStats, getSortedPosts } from '../utils/posts';
 
 interface Props {
   /** 首页主栏已有 recently scribbled，传 false 收起这栏避免重复 */
@@ -32,7 +32,7 @@ const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--yellow)'];
       <span class="l">posts</span>
     </div>
     <div class="stat hand-box wobble-b">
-      <span class="n" style="color: var(--blue)">{formatChars(stats.chars)}</span>
+      <span class="n" style="color: var(--blue)">{formatCount(stats.words)}</span>
       <span class="l">words</span>
     </div>
     <div class="stat hand-box wobble-c">

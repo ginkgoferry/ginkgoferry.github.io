@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "node --test scripts/*.test.mjs",
     "sync": "astro sync",
     "publish": "node scripts/publish.mjs"
   },

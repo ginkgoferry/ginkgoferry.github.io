@@ -76,6 +76,15 @@ Both are configured in `src/consts.ts` and stay completely off while their value
 - **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
 - **Giscus** (`GISCUS`): GitHub-Discussions-powered comments under each post, theme-synced with the site. Requires enabling Discussions on the repository and installing the giscus app; the four config values come from giscus.app.
 
+## Feeds
+
+The site generates both common subscription formats during every build:
+
+- RSS: <https://ginkgoferry.github.io/rss.xml>
+- Atom: <https://ginkgoferry.github.io/atom.xml>
+
+Feed readers discover them automatically from the metadata in every page. Add an optional `description` to a post's frontmatter to control its feed summary; otherwise a short summary is generated from the Markdown body.
+
 ## Custom domain
 
 1. Set `site` in `astro.config.mjs` to the new domain.

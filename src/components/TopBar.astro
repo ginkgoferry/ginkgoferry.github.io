@@ -3,12 +3,17 @@ import Doodle from './Doodle.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import SearchModal from './SearchModal.astro';
 import { SITE_TITLE } from '../consts';
-import { formatChars, getSiteStats, getSortedPosts } from '../utils/posts';
+import {
+  formatCount,
+  getLatestUpdatedDate,
+  getSiteStats,
+  getSortedPosts,
+} from '../utils/posts';
 
 const stats = await getSiteStats();
-const latest = (await getSortedPosts())[0];
-const updated = latest
-  ? `${String(latest.data.pubDate.getMonth() + 1).padStart(2, '0')}-${String(latest.data.pubDate.getDate()).padStart(2, '0')}`
+const latestUpdate = getLatestUpdatedDate(await getSortedPosts());
+const updated = latestUpdate
+  ? `${String(latestUpdate.getMonth() + 1).padStart(2, '0')}-${String(latestUpdate.getDate()).padStart(2, '0')}`
   : '—';
 ---
 
@@ -19,7 +24,7 @@ const updated = latest
   </span>
   <span class="grow"></span>
   <span class="num">
-    {stats.posts} {stats.posts === 1 ? 'post' : 'posts'} · {formatChars(stats.chars)} words · updated {updated}
+    {stats.posts} {stats.posts === 1 ? 'post' : 'posts'} · {formatCount(stats.words)} words · updated {updated}
   </span>
   <SearchModal />
   <ThemeToggle />

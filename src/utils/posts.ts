@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { SITE_CREATED_DATE } from '../consts';
 
 /** 按发布时间倒序取文章；生产构建里过滤掉草稿。 */
 export async function getSortedPosts(): Promise<CollectionEntry<'posts'>[]> {
@@ -18,17 +19,16 @@ export async function getSortedPosts(): Promise<CollectionEntry<'posts'>[]> {
 export function readingTime(body: string | undefined): number {
   if (!body) return 1;
 
-  const cjk = body.match(/[\u4e00-\u9fa5]/g)?.length ?? 0;
-  const words = body.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9]+/g)?.length ?? 0;
+  const { chinese, western } = countTextUnits(body);
 
-  return Math.max(1, Math.round(cjk / 400 + words / 200));
+  return Math.max(1, Math.round(chinese / 400 + western / 200));
 }
 
 export interface SiteStats {
   posts: number;
-  /** 全站汉字数 */
-  chars: number;
-  /** 从第一篇文章到今天的天数 */
+  /** 全站中文字数 + 西文词数 */
+  words: number;
+  /** 从固定建站日期到今天的完整自然日数 */
   days: number;
   tags: number;
 }
@@ -36,22 +36,30 @@ export interface SiteStats {
 /** 右侧栏「小本子」统计，全部从真实内容算出来。 */
 export async function getSiteStats(): Promise<SiteStats> {
   const posts = await getSortedPosts();
-
-  const chars = posts.reduce((sum, post) => {
-    const cjk = post.body?.match(/[\u4e00-\u9fa5]/g)?.length ?? 0;
-    return sum + cjk;
-  }, 0);
-
-  const first = posts.at(-1)?.data.pubDate ?? new Date();
-  const days = Math.max(1, Math.round((Date.now() - first.getTime()) / 86400_000));
+  const words = posts.reduce((sum, post) => sum + wordCount(post.body), 0);
+  const [year, month, day] = SITE_CREATED_DATE.split('-').map(Number);
+  const createdUtc = Date.UTC(year, month - 1, day);
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.max(0, Math.floor((todayUtc - createdUtc) / 86400_000));
   const tags = new Set(posts.flatMap((post) => post.data.tags)).size;
 
-  return { posts: posts.length, chars, days, tags };
+  return { posts: posts.length, words, days, tags };
 }
 
 /** 12345 → "12.3k"，小数字原样返回。 */
-export function formatChars(n: number): string {
+export function formatCount(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
+/** 全站最近一次内容变化，优先采用文章的 updatedDate。 */
+export function getLatestUpdatedDate(
+  posts: CollectionEntry<'posts'>[],
+): Date | undefined {
+  return posts.reduce<Date | undefined>((latest, post) => {
+    const date = post.data.updatedDate ?? post.data.pubDate;
+    return !latest || date > latest ? date : latest;
+  }, undefined);
 }
 
 /** 文章列表每页条数 */
@@ -78,12 +86,20 @@ export async function getCategories(): Promise<CategoryInfo[]> {
     .sort((a, b) => b.posts.length - a.posts.length);
 }
 
-/** 字数：CJK 按字、西文按词，和 readingTime 同一套口径。 */
+function countTextUnits(body: string): { chinese: number; western: number } {
+  const chinese = body.match(/\p{Script=Han}/gu)?.length ?? 0;
+  const western = body
+    .replace(/\p{Script=Han}/gu, ' ')
+    .match(/[a-zA-Z0-9]+(?:['’-][a-zA-Z0-9]+)*/g)?.length ?? 0;
+
+  return { chinese, western };
+}
+
+/** 字数：中文按字、西文按词，和 readingTime、全站统计使用同一口径。 */
 export function wordCount(body: string | undefined): number {
   if (!body) return 0;
 
-  const cjk = body.match(/[\u4e00-\u9fa5]/g)?.length ?? 0;
-  const words = body.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9]+/g)?.length ?? 0;
+  const { chinese, western } = countTextUnits(body);
 
-  return cjk + words;
+  return chinese + western;
 }

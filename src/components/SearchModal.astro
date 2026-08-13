@@ -7,13 +7,23 @@ import Doodle from './Doodle.astro';
 </button>
 
 <dialog id="search-dialog" aria-label="search the notebook">
+  <div class="dialog-top">
+    <span>search the notebook</span>
+    <button id="search-close" type="button" class="close-btn" aria-label="close search">
+      <Doodle name="close" />
+    </button>
+  </div>
+  <label for="search-input" class="sr-only">search posts</label>
   <input
     id="search-input"
     type="search"
     placeholder="search titles, tags, categories…"
     autocomplete="off"
+    aria-controls="search-results"
+    aria-describedby="search-status"
   />
-  <ul id="search-results" class="results"></ul>
+  <p id="search-status" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+  <ul id="search-results" class="results" aria-label="search results"></ul>
 </dialog>
 
 <style>
@@ -49,6 +59,39 @@ import Doodle from './Doodle.astro';
 
   dialog::backdrop {
     background: rgba(20, 16, 10, 0.4);
+  }
+
+  .dialog-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: -0.15rem 0.05rem 0.9rem 0.1rem;
+    color: var(--ink-soft);
+  }
+
+  .close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1.6px solid var(--line-strong);
+    border-radius: 5px 2px 6px 3px / 3px 6px 2px 5px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    box-shadow: 2px 2px 0 var(--shadow);
+    font-size: 1.05rem;
+    cursor: pointer;
+    transform: rotate(-1.5deg);
+    transition: color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .close-btn:hover {
+    color: var(--red);
+    box-shadow: 3px 4px 0 var(--shadow);
+    transform: rotate(2deg) translateY(-1px);
   }
 
   input {
@@ -87,7 +130,8 @@ import Doodle from './Doodle.astro';
     text-decoration: none;
   }
 
-  .results :global(a:hover) {
+  .results :global(a:hover),
+  .results :global(a:focus-visible) {
     color: var(--red);
     text-decoration: underline;
     text-decoration-style: wavy;
@@ -117,12 +161,16 @@ import Doodle from './Doodle.astro';
       'search-input',
     ) as HTMLInputElement | null;
     const list = document.getElementById('search-results');
-    if (!btn || !dlg || !input || !list) return;
+    const close = document.getElementById('search-close');
+    const status = document.getElementById('search-status');
+    if (!btn || !dlg || !input || !list || !close || !status) return;
     // 守卫后重新绑定：闭包里不继承外部的控制流窄化
     const openBtn = btn;
     const dialog = dlg;
     const field = input;
     const results = list;
+    const closeBtn = close;
+    const liveStatus = status;
 
     // 索引懒加载：第一次点开搜索才去取 JSON
     let data: Entry[] | null = null;
@@ -137,30 +185,35 @@ import Doodle from './Doodle.astro';
     function render() {
       results.textContent = '';
       const q = field.value.trim().toLowerCase();
-      if (!q || !data) return;
+      if (!q) {
+        liveStatus.textContent = 'type a word to search';
+        return;
+      }
+      if (!data) return;
 
-      const hits = data
-        .filter(
+      const matches = data.filter(
           (p) =>
             p.title.toLowerCase().indexOf(q) !== -1 ||
             (p.category || '').toLowerCase().indexOf(q) !== -1 ||
             p.tags.some((t) => t.toLowerCase().indexOf(q) !== -1),
-        )
-        .slice(0, 10);
+        );
+      const hits = matches.slice(0, 10);
 
       if (!hits.length) {
         const empty = document.createElement('li');
         empty.className = 'muted';
         empty.textContent = 'no matches — try another word';
         results.appendChild(empty);
+        liveStatus.textContent = 'no search results found';
         return;
       }
 
-      hits.forEach((p) => {
+      hits.forEach((p, index) => {
         const li = document.createElement('li');
         const a = document.createElement('a');
         a.href = `/posts/${p.id}/`;
         a.textContent = p.title;
+        a.dataset.resultIndex = String(index);
         const when = document.createElement('span');
         when.className = 'when faint';
         when.textContent = p.date;
@@ -168,14 +221,50 @@ import Doodle from './Doodle.astro';
         li.appendChild(when);
         results.appendChild(li);
       });
+
+      liveStatus.textContent = matches.length > hits.length
+        ? `showing ${hits.length} of ${matches.length} search results; use the up and down arrow keys to choose a result`
+        : `${hits.length} search ${hits.length === 1 ? 'result' : 'results'} found; use the up and down arrow keys to choose a result`;
+    }
+
+    function resultLinks(): HTMLAnchorElement[] {
+      return Array.from(results.querySelectorAll<HTMLAnchorElement>('a[data-result-index]'));
+    }
+
+    function focusResult(index: number) {
+      const links = resultLinks();
+      if (!links.length) return;
+      const next = (index + links.length) % links.length;
+      links[next].focus();
     }
 
     openBtn.addEventListener('click', () => {
       dialog.showModal();
       field.focus();
-      load().then(render);
+      liveStatus.textContent = 'loading search index';
+      load().then(render).catch(() => {
+        liveStatus.textContent = 'search is temporarily unavailable';
+      });
     });
     field.addEventListener('input', render);
+    field.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      event.preventDefault();
+      const links = resultLinks();
+      if (!links.length) return;
+      focusResult(event.key === 'ArrowDown' ? 0 : links.length - 1);
+    });
+    results.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      const target = event.target;
+      if (!(target instanceof HTMLAnchorElement)) return;
+      const index = Number(target.dataset.resultIndex);
+      if (!Number.isInteger(index)) return;
+      event.preventDefault();
+      focusResult(index + (event.key === 'ArrowDown' ? 1 : -1));
+    });
+    closeBtn.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => openBtn.focus());
     // 点遮罩关闭；Esc 由 <dialog> 原生处理
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.close();

@@ -1,5 +1,8 @@
 export const SITE_TITLE = 'ginkgoferry';
 export const AUTHOR = 'ginkgoferry';
+export const SITE_DESCRIPTION = 'A hand-drawn notebook about code and everyday things.';
+// 仓库首次提交日期；站点运行天数从这个固定日期计算。
+export const SITE_CREATED_DATE = '2026-08-11';
 // UI 文案用英文；文章内容（中文）由霞鹜文楷接管
 export const LOCALE = 'en-US';
 

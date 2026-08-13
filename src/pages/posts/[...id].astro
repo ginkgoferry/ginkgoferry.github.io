@@ -6,7 +6,7 @@ import TocRail from '../../components/TocRail.astro';
 import TocFab from '../../components/TocFab.astro';
 import Comments from '../../components/Comments.astro';
 import { GOATCOUNTER_ID } from '../../consts';
-import { getSortedPosts, readingTime, wordCount, formatChars } from '../../utils/posts';
+import { getSortedPosts, readingTime, wordCount, formatCount } from '../../utils/posts';
 
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
@@ -45,7 +45,7 @@ const words = wordCount(post.body);
         }
         <FormattedDate date={post.data.pubDate} />
         <span>{minutes} min read</span>
-        <span>{formatChars(words)} words</span>
+        <span>{formatCount(words)} words</span>
         {
           GOATCOUNTER_ID && (
             <span

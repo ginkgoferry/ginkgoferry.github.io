@@ -6,6 +6,8 @@ const posts = defineCollection({
   loader: glob({ base: './src/content/posts', pattern: '**/*.{md,mdx}' }),
   schema: z.object({
     title: z.string(),
+    // 用于订阅摘要和 SEO；不填时 Feed 会从正文自动截取。
+    description: z.string().optional(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     // 主分类（每篇一个），用于 /categories/；不填则只出现在 tags 里
