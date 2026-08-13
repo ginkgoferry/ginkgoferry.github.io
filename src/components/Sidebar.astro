@@ -6,7 +6,7 @@ const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? path === '/' : path.startsWith(href);
 
-const socialIcon = { GitHub: 'github', Email: 'mail' } as const;
+const socialIcon = { GitHub: 'github', Email: 'mail', RSS: 'rss' } as const;
 ---
 
 <aside class="sidebar">

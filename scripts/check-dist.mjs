@@ -71,7 +71,7 @@ export function checkDist(root) {
   const errors = [];
   if (!fs.existsSync(dist)) return { errors: ['dist 不存在，请先运行 npm run build'], files: 0 };
 
-  for (const feed of ['rss.xml', 'atom.xml']) {
+  for (const feed of ['rss.xml']) {
     const file = path.join(dist, feed);
     if (!fs.existsSync(file)) {
       errors.push(`缺少 Feed：/${feed}`);

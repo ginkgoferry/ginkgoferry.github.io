@@ -1,4 +1,5 @@
 ---
+import Doodle from './Doodle.astro';
 import { AUTHOR, GOATCOUNTER_ID } from '../consts';
 
 const year = new Date().getFullYear();
@@ -7,13 +8,14 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <span class="squiggle"></span>
   <p>© {year} {AUTHOR}. Some rights reserved.</p>
-  <p class="feeds faint">
-    subscribe via <a href="/rss.xml">RSS</a> · <a href="/atom.xml">Atom</a>
-  </p>
   {
     GOATCOUNTER_ID && (
       <p class="gc faint">
-        <span id="gc-total" hidden data-code={GOATCOUNTER_ID}></span>
+        <span id="gc-total" class="total-views" hidden data-code={GOATCOUNTER_ID}>
+          <Doodle name="eye" class="views-icon" />
+          <span class="views-count" data-count></span>
+          <span>total views</span>
+        </span>
         <a href={`https://${GOATCOUNTER_ID}.goatcounter.com/`} rel="noopener">
           stats by GoatCounter
         </a>
@@ -35,8 +37,10 @@ const year = new Date().getFullYear();
             return r.ok ? r.json() : Promise.reject();
           })
           .then(function (d) {
+            var count = el.querySelector('[data-count]');
+            if (!count) return;
+            count.textContent = d.count;
             el.hidden = false;
-            el.textContent = d.count + ' views in total · ';
           })
           .catch(function () {});
       })();
@@ -50,10 +54,31 @@ const year = new Date().getFullYear();
   }
 
   .gc {
-    margin-top: 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem 1.25rem;
+    margin-top: 0.55rem;
   }
 
-  .feeds {
-    margin-top: 0.4rem;
+  .total-views {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .total-views[hidden] {
+    display: none;
+  }
+
+  .views-count {
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total-views :global(.views-icon) {
+    color: var(--blue);
+    font-size: 1.05rem;
   }
 </style>

@@ -23,6 +23,7 @@ export const NAV_LINKS = [
 export const SOCIAL_LINKS = [
   { href: 'https://github.com/ginkgoferry', label: 'GitHub' },
   { href: 'mailto:zehaochen@smail.nju.edu.cn', label: 'Email' },
+  { href: '/rss.xml', label: 'RSS' },
 ] as const;
 
 // 浏览量统计：goatcounter.com 注册后填你的 code（如 'ginkgoferry'），留空则关闭。

@@ -17,7 +17,6 @@ test('dist check reports broken internal links and malformed feeds', (t) => {
   fs.mkdirSync(dist, { recursive: true });
   fs.writeFileSync(path.join(dist, 'index.html'), '<a href="/missing/">broken</a>');
   fs.writeFileSync(path.join(dist, 'rss.xml'), '<rss><channel></rss>');
-  fs.writeFileSync(path.join(dist, 'atom.xml'), '<feed></feed>');
 
   const result = checkDist(root);
   assert.ok(result.errors.some((error) => error.includes('站内资源')));

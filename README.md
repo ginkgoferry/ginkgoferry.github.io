@@ -80,14 +80,13 @@ Both are configured in `src/consts.ts`. They are enabled in this repository; cle
 - **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
 - **Giscus** (`GISCUS`): GitHub-Discussions-powered comments under each post, theme-synced with the site. Requires enabling Discussions on the repository and installing the giscus app; the four config values come from giscus.app.
 
-## Feeds
+## Feed
 
-The site generates both common subscription formats during every build:
+The site generates an RSS feed during every build:
 
 - RSS: <https://ginkgoferry.github.io/rss.xml>
-- Atom: <https://ginkgoferry.github.io/atom.xml>
 
-Feed readers discover them automatically from the metadata in every page. Add an optional `description` to a post's frontmatter to control its feed summary; otherwise a short summary is generated from the Markdown body.
+Feed readers discover it automatically from the metadata in every page, and the hand-drawn RSS icon in the sidebar links to it. Add an optional `description` to a post's frontmatter to control its feed summary; otherwise a short summary is generated from the Markdown body.
 
 ## Custom domain
 
@@ -111,4 +110,4 @@ src/
 └── content.config.ts  # post frontmatter schema
 ```
 
-The site ships with a sitemap, RSS/Atom feeds, category shelves, tag pages, an archive timeline, pagination, search, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.
+The site ships with a sitemap, RSS feed, category shelves, tag pages, an archive timeline, pagination, search, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.

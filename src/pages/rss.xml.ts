@@ -7,7 +7,6 @@ export const GET: APIRoute = async ({ site }) => {
   if (!site) return new Response('Site URL is not configured', { status: 500 });
 
   const feed = await getFeedData(site);
-  const selfUrl = new URL('/rss.xml', site).href;
   const items = feed.entries.map((entry) => `
     <item>
       <title>${escapeXml(entry.title)}</title>
@@ -19,14 +18,13 @@ ${entry.categories.map((category) => `      <category>${escapeXml(category)}</ca
     </item>`).join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0">
   <channel>
     <title>${escapeXml(feed.title)}</title>
     <link>${escapeXml(feed.siteUrl)}</link>
     <description>${escapeXml(feed.description)}</description>
     <language>zh-CN</language>
-    <lastBuildDate>${feed.updated.toUTCString()}</lastBuildDate>
-    <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />${items}
+    <lastBuildDate>${feed.updated.toUTCString()}</lastBuildDate>${items}
   </channel>
 </rss>
 `;

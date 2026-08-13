@@ -1,5 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
-import { AUTHOR, SITE_CREATED_DATE, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { SITE_CREATED_DATE, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { getSortedPosts } from './posts';
 
 export interface FeedEntry {
@@ -14,7 +14,6 @@ export interface FeedEntry {
 export interface FeedData {
   title: string;
   description: string;
-  author: string;
   siteUrl: string;
   updated: Date;
   entries: FeedEntry[];
@@ -74,7 +73,6 @@ export async function getFeedData(site: URL): Promise<FeedData> {
   return {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    author: AUTHOR,
     siteUrl: site.href,
     updated,
     entries,
