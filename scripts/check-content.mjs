@@ -12,11 +12,24 @@ function walk(dir) {
   });
 }
 
-function localImageTargets(source) {
+function images(source) {
   const markdown = findMarkdownImages(source).map((image) => image.destination);
-  const html = [...source.matchAll(/<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi)]
-    .map((match) => match[1]);
-  return [...markdown, ...html];
+  const html = [...source.matchAll(/<img\s+([^>]*)>/gi)].map((match) => ({
+    destination: match[1].match(/\bsrc=["']([^"']+)["']/i)?.[1] ?? '',
+  })).map((image) => image.destination);
+  return [...markdown, ...html].filter(Boolean);
+}
+
+function frontmatterValue(source, key) {
+  const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1];
+  if (!frontmatter) return undefined;
+  const raw = frontmatter.match(new RegExp(`^${key}:\\s*(.*?)\\s*$`, 'm'))?.[1];
+  if (!raw) return undefined;
+  if ((raw.startsWith("'") && raw.endsWith("'"))
+    || (raw.startsWith('"') && raw.endsWith('"'))) {
+    return raw.slice(1, -1);
+  }
+  return raw;
 }
 
 function withoutQueryOrHash(value) {
@@ -37,6 +50,7 @@ export function checkContent(root) {
   const posts = walk(postsDir).filter((file) => /\.(md|mdx)$/i.test(file));
   const errors = [];
   const slugs = new Map();
+  const titles = new Map();
 
   for (const post of posts) {
     const relative = path.relative(postsDir, post);
@@ -49,7 +63,24 @@ export function checkContent(root) {
     }
 
     const source = fs.readFileSync(post, 'utf8');
-    for (const rawTarget of localImageTargets(source)) {
+    const title = frontmatterValue(source, 'title');
+    if (title) {
+      const titleKey = title.normalize('NFC').trim().toLowerCase();
+      const existingTitle = titles.get(titleKey);
+      if (existingTitle) {
+        errors.push(`标题重复：${existingTitle} 与 ${relative}（${title}）`);
+      } else {
+        titles.set(titleKey, relative);
+      }
+    }
+
+    const pubDate = frontmatterValue(source, 'pubDate');
+    const updatedDate = frontmatterValue(source, 'updatedDate');
+    if (updatedDate && pubDate && updatedDate < pubDate) {
+      errors.push(`${relative} 的 updatedDate ${updatedDate} 早于 pubDate ${pubDate}`);
+    }
+
+    for (const rawTarget of images(source)) {
       if (/^(?:[a-z]+:)?\/\//i.test(rawTarget) || /^(?:data:|#)/i.test(rawTarget)) continue;
       const target = decodePath(withoutQueryOrHash(rawTarget));
       const resolved = target.startsWith('/')
@@ -76,6 +107,6 @@ if (isMain) {
     for (const error of result.errors) console.error(`- ${error}`);
     process.exitCode = 1;
   } else {
-    console.log(`✅ 内容检查通过：${result.posts} 篇文章，图片引用与 slug 均正常`);
+    console.log(`✅ 内容检查通过：${result.posts} 篇文章`);
   }
 }

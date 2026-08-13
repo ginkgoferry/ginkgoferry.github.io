@@ -13,7 +13,8 @@ npm run build    # build to dist/
 npm run preview  # preview the production build
 npm run check    # type check
 npm test         # publisher and content-check tests
-npm run check:content # verify post image references and slug uniqueness
+npm run check:content # verify post metadata, images and slug uniqueness
+npm run check:dist    # after build, verify internal links, assets and Feed XML
 ```
 
 ## First-time setup
@@ -57,7 +58,7 @@ draft: false # true keeps the post local-only
 ---
 ```
 
-The schema is defined in `src/content.config.ts`; invalid frontmatter fails the build. CI also rejects missing local images and post slugs that differ only by letter case.
+The schema is defined in `src/content.config.ts`; invalid frontmatter fails the build. CI also rejects invalid date order, duplicate titles, missing local images, and post slugs that differ only by letter case.
 
 Images go in `public/images/<slug>/` and are referenced by site-root path: `![alt](/images/pv/img-01.webp)`.
 
