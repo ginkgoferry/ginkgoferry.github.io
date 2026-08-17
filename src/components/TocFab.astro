@@ -30,13 +30,14 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   )
 }
 
-<script is:inline>
-  // 点目录跳转后顺手把弹窗合上
-  document.querySelectorAll('.toc-fab a').forEach((a) =>
-    a.addEventListener('click', () =>
-      a.closest('details').removeAttribute('open'),
-    ),
-  );
+<script>
+  // 点目录跳转后顺手把弹窗合上。
+  // 委托绑在 document 上，一次绑定即可：视图切换后 DOM 换了也照样工作。
+  document.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element)) return;
+    const a = e.target.closest('.toc-fab a');
+    if (a) a.closest('details')?.removeAttribute('open');
+  });
 </script>
 
 <style>

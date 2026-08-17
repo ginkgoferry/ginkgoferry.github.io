@@ -45,11 +45,27 @@ const ogImage = new URL('/og-card.png', Astro.site);
 
 {
   GOATCOUNTER_ID && (
-    <script
-      is:inline
-      data-goatcounter={`https://${GOATCOUNTER_ID}.goatcounter.com/count`}
-      async
-      src="//gc.zgo.at/count.js"
-    ></script>
+    <>
+      <script
+        is:inline
+        data-goatcounter={`https://${GOATCOUNTER_ID}.goatcounter.com/count`}
+        async
+        src="//gc.zgo.at/count.js"
+      ></script>
+      <script is:inline>
+        // 视图切换不算整页加载，count.js 不会自己计数：导航后手动补一次。
+        // 首次加载 count.js 自己会算，跳过第一个 astro:page-load。
+        var gcSkippedFirst = false;
+        document.addEventListener('astro:page-load', function () {
+          if (!gcSkippedFirst) {
+            gcSkippedFirst = true;
+            return;
+          }
+          if (window.goatcounter && window.goatcounter.count) {
+            window.goatcounter.count();
+          }
+        });
+      </script>
+    </>
   )
 }

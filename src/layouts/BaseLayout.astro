@@ -3,6 +3,7 @@
 // 访客浏览器只下载页面实际用到字符的那几片。
 import 'lxgw-wenkai-webfont/lxgwwenkai-regular.css';
 import 'lxgw-wenkai-webfont/lxgwwenkai-bold.css';
+import { ClientRouter } from 'astro:transitions';
 import BaseHead from '../components/BaseHead.astro';
 import TopBar from '../components/TopBar.astro';
 import Sidebar from '../components/Sidebar.astro';
@@ -22,6 +23,8 @@ const { title, type, lang = 'en-US' } = Astro.props;
 <!doctype html>
 <html lang={lang}>
   <head>
+    {/* 视图切换：站内导航不整页重载，只换正文区域，顶栏/侧栏原地不动 */}
+    <ClientRouter />
     <BaseHead title={title} type={type} />
     <script is:inline>
       // 首屏之前定好主题：手动切过听 localStorage，否则跟随系统。
@@ -29,6 +32,11 @@ const { title, type, lang = 'en-US' } = Astro.props;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.dataset.theme =
         stored ?? (prefersDark ? 'dark' : 'light');
+      // 视图切换换文档前把主题搬到新文档，暗色用户导航时不被闪一下亮屏
+      document.addEventListener('astro:before-swap', (event) => {
+        event.newDocument.documentElement.dataset.theme =
+          document.documentElement.dataset.theme;
+      });
     </script>
   </head>
   <body>

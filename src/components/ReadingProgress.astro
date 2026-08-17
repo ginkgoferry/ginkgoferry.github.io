@@ -31,7 +31,13 @@
 </style>
 
 <script>
-  (function () {
+  // 视图切换后进度条元素随正文换掉：astro:page-load 时重挂监听，
+  // 重挂前先拆旧的，避免滚动监听在 window 上越积越多。
+  let progressTeardown: (() => void) | null = null;
+  document.addEventListener('astro:page-load', () => {
+    progressTeardown?.();
+    progressTeardown = null;
+
     const found = document.querySelector<HTMLElement>('.reading-progress');
     const fillEl = found?.querySelector<HTMLElement>('.fill');
     if (!found || !fillEl) return;
@@ -59,5 +65,11 @@
     window.addEventListener('resize', schedule);
     window.addEventListener('hashchange', schedule);
     update();
-  })();
+
+    progressTeardown = () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('hashchange', schedule);
+    };
+  });
 </script>

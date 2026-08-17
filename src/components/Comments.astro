@@ -28,25 +28,31 @@ const themeDark = new URL('giscus-dark.css', Astro.site).href;
 }
 
 {
-  enabled && (
-    <script is:inline>
-      (function () {
-        var box = document.querySelector('.giscus');
-        if (!box) return;
+    <script>
+      // 视图切换后评论要按新文章重挂：giscus 按 pathname 映射讨论串。
+      // astro:page-load 首次加载和每次导航后都触发；重挂前先断开旧的观察器。
+      let giscusTeardown: (() => void) | null = null;
+      document.addEventListener('astro:page-load', () => {
+        giscusTeardown?.();
+        giscusTeardown = null;
+
+        const found = document.querySelector<HTMLElement>('.giscus');
+        if (!found) return;
+        // 守卫后重新绑定：闭包里不继承外部的控制流窄化
+        const box = found;
 
         // 自定义主题：传 css 的 URL，而不是 giscus 内置主题名
-        var theme = function () {
-          return document.documentElement.dataset.theme === 'dark'
-            ? box.dataset.themeDark
-            : box.dataset.themeLight;
-        };
+        const theme = (): string =>
+          document.documentElement.dataset.theme === 'dark'
+            ? box.dataset.themeDark || ""
+            : box.dataset.themeLight || "";
 
-        var s = document.createElement('script');
+        const s = document.createElement('script');
         s.src = 'https://giscus.app/client.js';
-        s.setAttribute('data-repo', box.dataset.repo);
-        s.setAttribute('data-repo-id', box.dataset.repoId);
-        s.setAttribute('data-category', box.dataset.category);
-        s.setAttribute('data-category-id', box.dataset.categoryId);
+        s.setAttribute('data-repo', box.dataset.repo || '');
+        s.setAttribute('data-repo-id', box.dataset.repoId || '');
+        s.setAttribute('data-category', box.dataset.category || '');
+        s.setAttribute('data-category-id', box.dataset.categoryId || '');
         s.setAttribute('data-mapping', 'pathname');
         s.setAttribute('data-strict', '0');
         s.setAttribute('data-reactions-enabled', '1');
@@ -59,21 +65,23 @@ const themeDark = new URL('giscus-dark.css', Astro.site).href;
         box.appendChild(s);
 
         // 切换黑板/纸面主题时，通知 giscus iframe 跟着换
-        new MutationObserver(function () {
-          var frame = box.querySelector('iframe.giscus-frame');
+        const observer = new MutationObserver(() => {
+          const frame = box.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
           if (frame) {
-            frame.contentWindow.postMessage(
+            frame.contentWindow?.postMessage(
               { giscus: { setConfig: { theme: theme() } } },
               'https://giscus.app',
             );
           }
-        }).observe(document.documentElement, {
+        });
+        observer.observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['data-theme'],
         });
-      })();
+
+        giscusTeardown = () => observer.disconnect();
+      });
     </script>
-  )
 }
 
 <style>

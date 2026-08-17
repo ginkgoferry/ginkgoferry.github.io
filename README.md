@@ -71,6 +71,7 @@ Images go in `public/images/<slug>/` and are referenced by site-root path: `![al
 | Homepage copy | `src/pages/index.astro` |
 | Top bar / sidebar / footer | `src/components/TopBar.astro`, `Sidebar.astro`, `Footer.astro` |
 | Image zoom, reading progress, back-to-top | `src/components/Lightbox.astro`, `ReadingProgress.astro`, `BackToTop.astro` |
+| Page transitions & prefetch | `<ClientRouter />` in `src/layouts/BaseLayout.astro`, `prefetch` in `astro.config.mjs` |
 
 Colors are defined once as CSS variables at the top of `global.css`; each theme (light/dark) changes in a single place.
 
@@ -78,7 +79,7 @@ Colors are defined once as CSS variables at the top of `global.css`; each theme 
 
 Both are configured in `src/consts.ts`. They are enabled in this repository; clearing the corresponding values disables them completely:
 
-- **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
+- **GoatCounter** (`GOATCOUNTER_ID`): cookie-free pageview stats. Per-post view counts and a site-wide total in the footer appear once the ID is set; the dashboard shows unique visitors. Client-side navigation is counted too (the router re-counts on each view transition). Requires enabling *Allow adding visitor counts* in the GoatCounter site settings.
 - **Giscus** (`GISCUS`): GitHub-Discussions-powered comments under each post, theme-synced with the site. Requires enabling Discussions on the repository and installing the giscus app; the four config values come from giscus.app.
 
 ## Feed
@@ -113,4 +114,4 @@ src/
 └── content.config.ts  # post frontmatter schema
 ```
 
-The site ships with a sitemap, full-text RSS feed, category shelves, tag pages, an archive timeline, pagination, full-text search (Ctrl/Cmd+K, arrow keys, Enter opens the top hit), an image lightbox with keyboard navigation, per-post reading progress, a back-to-top button, prev/next navigation, and per-post tables of contents. Post images get width/height injected at build time (no layout shift) plus a responsive 750w variant when available. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.
+The site ships with a sitemap, full-text RSS feed, category shelves, tag pages, an archive timeline, pagination, full-text search (Ctrl/Cmd+K, arrow keys, Enter opens the top hit), an image lightbox with keyboard navigation, per-post reading progress, a back-to-top button, prev/next navigation, and per-post tables of contents. Post images get width/height injected at build time (no layout shift) plus a responsive 750w variant when available. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus. In-site navigation uses view transitions: the top bar, sidebar, and footer are persisted (they never repaint across pages), only the content area swaps with a light fade, and links prefetch on hover.

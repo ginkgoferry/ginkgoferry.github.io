@@ -9,7 +9,7 @@ const isActive = (href: string) =>
 const socialIcon = { GitHub: 'github', Email: 'mail', RSS: 'rss' } as const;
 ---
 
-<aside class="sidebar">
+<aside class="sidebar" transition:persist="sidebar">
   <a href="/" class="brand underline-rough">{SITE_TITLE}</a>
   <p class="motto">“{SITE_MOTTO}”</p>
 
@@ -35,3 +35,17 @@ const socialIcon = { GitHub: 'github', Email: 'mail', RSS: 'rss' } as const;
     }
   </div>
 </aside>
+
+<script>
+  // 侧栏被 transition:persist 保留下来，SSR 算好的激活态不会随导航重算，
+  // 每次视图切换后按当前路径手动刷新 aria-current。
+  document.addEventListener('astro:page-load', () => {
+    const path = window.location.pathname;
+    document.querySelectorAll('.side-nav a').forEach((a) => {
+      const href = a.getAttribute('href') || '';
+      const active = href === '/' ? path === '/' : path.startsWith(href);
+      if (active) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  });
+</script>

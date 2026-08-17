@@ -113,82 +113,89 @@ const words = wordCount(post.body);
 
   {
     GOATCOUNTER_ID && (
-      <script is:inline>
-        (function () {
-          var el = document.getElementById('gc-views');
+      <script>
+        // 浏览量：视图切换后正文换页，重新拉当前页的计数。
+        // astro:page-load 首次加载和每次导航后都会触发。
+        document.addEventListener('astro:page-load', () => {
+          const el = document.getElementById(
+            'gc-views',
+          ) as HTMLElement | null;
           if (!el) return;
+          el.hidden = true;
           fetch(
-            'https://' +
+            "https://" +
               el.dataset.code +
-              '.goatcounter.com/counter/' +
-              encodeURIComponent(el.dataset.path) +
-              '.json',
+              ".goatcounter.com/counter/" +
+              encodeURIComponent(el.dataset.path || "") +
+              ".json",
           )
-            .then(function (r) {
-              return r.ok ? r.json() : Promise.reject();
-            })
-            .then(function (d) {
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("gc"))))
+            .then((d: { count: number }) => {
               el.hidden = false;
-              el.textContent = d.count + ' views';
+              el.textContent = d.count + " views";
             })
-            .catch(function () {});
-        })();
+            .catch(() => {});
+        });
       </script>
     )
   }
 
-  <script is:inline>
-    // 代码块复制：行号是 CSS 计数器画的，不在 DOM 文本里，复制出来是干净代码
-    (function () {
-      function flash(btn) {
-        btn.textContent = 'copied!';
-        btn.setAttribute('data-copied', '');
-        setTimeout(function () {
-          btn.textContent = 'copy';
-          btn.removeAttribute('data-copied');
-        }, 1600);
+<script>
+  // 代码块复制：行号是 CSS 计数器画的，不在 DOM 文本里，复制出来是干净代码。
+  // 委托绑在 document 上，一次绑定对所有页面生效（模块脚本本就只执行一次）。
+  (function () {
+    function flash(btn: HTMLElement): void {
+      btn.textContent = 'copied!';
+      btn.setAttribute('data-copied', '');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.removeAttribute('data-copied');
+      }, 1600);
+    }
+
+    function legacyCopy(text: string, btn: HTMLElement): void {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        // 已废弃但仍是唯一兜底：clipboard API 不可用时的最后手段
+        if (document.execCommand('copy')) flash(btn);
+      } catch {
+        /* 剪贴板不可用就保持原样 */
       }
+      ta.remove();
+    }
 
-      function legacyCopy(text, btn) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          // 已废弃但仍是唯一兜底：clipboard API 不可用时的最后手段
-          if (document.execCommand('copy')) flash(btn);
-        } catch (_) {
-          /* 剪贴板不可用就保持原样 */
-        }
-        ta.remove();
+    document.addEventListener('click', (e) => {
+      const btn =
+        e.target instanceof Element
+          ? e.target.closest<HTMLElement>(".code-copy")
+          : null;
+      if (!btn) return;
+      const wrap = btn.closest(".pre-wrap");
+      const pre = wrap && wrap.querySelector("pre");
+      if (!pre) return;
+      const text = pre.textContent || "";
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          () => flash(btn),
+          () => legacyCopy(text, btn),
+        );
+      } else {
+        legacyCopy(text, btn);
       }
+    });
+  })();
+</script>
 
-      document.addEventListener('click', function (e) {
-        var btn = e.target instanceof Element ? e.target.closest('.code-copy') : null;
-        if (!btn) return;
-        var pre = btn.closest('.pre-wrap');
-        pre = pre && pre.querySelector('pre');
-        if (!pre) return;
-        var text = pre.textContent || '';
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(
-            function () { flash(btn); },
-            function () { legacyCopy(text, btn); },
-          );
-        } else {
-          legacyCopy(text, btn);
-        }
-      });
-    })();
-  </script>
+<TocFab headings={headings} />
 
-  <TocFab headings={headings} />
-
-  <Fragment slot="rail">
-    <TocRail headings={headings} />
-  </Fragment>
+<Fragment slot="rail">
+  <TocRail headings={headings} />
+</Fragment>
 </BaseLayout>
 
 <style>

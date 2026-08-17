@@ -13,6 +13,11 @@ import { rehypeHeadingLinks } from './src/plugins/rehype-heading-links.mjs';
 export default defineConfig({
   site: 'https://ginkgoferry.github.io',
   integrations: [mdx(), sitemap()],
+  // 悬停预取：鼠标扫过链接就悄悄把页面拉下来，配合视图切换近乎即点即开
+  prefetch: {
+    prefetchAll: false,
+    defaultStrategy: 'hover',
+  },
   markdown: {
     processor: unified({
       rehypePlugins: [

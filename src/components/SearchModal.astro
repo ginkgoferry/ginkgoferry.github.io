@@ -347,5 +347,11 @@ import Doodle from './Doodle.astro';
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.close();
     });
+    // 点结果跳转前先关窗：顶栏被视图切换保留，弹窗不关会一路开着带进新页面
+    results.addEventListener('click', (e) => {
+      if (e.target instanceof Element && e.target.closest('a[data-result-index]')) {
+        dialog.close();
+      }
+    });
   })();
 </script>

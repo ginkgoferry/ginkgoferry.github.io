@@ -161,67 +161,29 @@ import Doodle from './Doodle.astro';
   }
 </style>
 
-<script>
-  (function () {
-    const dlg = document.getElementById(
-      'lightbox',
-    ) as HTMLDialogElement | null;
-    const frame = document.getElementById(
-      'lightbox-frame',
-    ) as HTMLElement | null;
-    const img = document.getElementById(
-      'lightbox-img',
-    ) as HTMLImageElement | null;
-    const countEl = document.getElementById('lightbox-count');
-    const prev = document.getElementById(
-      'lightbox-prev',
-    ) as HTMLButtonElement | null;
-    const next = document.getElementById(
-      'lightbox-next',
-    ) as HTMLButtonElement | null;
-    const closeBtn = document.getElementById(
-      'lightbox-close',
-    ) as HTMLButtonElement | null;
-    if (!dlg || !frame || !img || !countEl || !prev || !next || !closeBtn)
-      return;
-    // 守卫后重新绑定：闭包里不继承外部的控制流窄化
-    const dialog = dlg;
-    const stage = frame;
-    const view = img;
-    const count = countEl;
-    const prevBtn = prev;
-    const nextBtn = next;
-    const closeButton = closeBtn;
-
-    const images = Array.from(
-      document.querySelectorAll<HTMLImageElement>('.prose img'),
-    );
-    if (!images.length) return;
-
-    const single = images.length < 2;
-    if (single) {
-      prevBtn.hidden = true;
-      nextBtn.hidden = true;
-      count.hidden = true;
+<script>  (function () {
+    interface LightboxCtx {
+      dialog: HTMLDialogElement;
+      stage: HTMLElement;
+      view: HTMLImageElement;
+      count: HTMLElement;
+      prevBtn: HTMLButtonElement;
+      nextBtn: HTMLButtonElement;
+      closeButton: HTMLButtonElement;
+      images: HTMLImageElement[];
+      single: boolean;
     }
 
+    let ctx: LightboxCtx | null = null;
     let current = 0;
     let trigger: HTMLElement | null = null; // 打开时焦点来自哪张图，关掉后还回去
 
-    // 让截图能被 Tab 聚焦、回车打开
-    images.forEach((el) => {
-      el.setAttribute('tabindex', '0');
-      el.setAttribute('role', 'button');
-      const alt = el.getAttribute('alt') || '';
-      el.setAttribute(
-        'aria-label',
-        alt ? `放大查看图片：${alt}` : '放大查看图片',
-      );
-    });
-
     function show(i: number): void {
+      if (!ctx) return;
+      const images = ctx.images;
       current = ((i % images.length) + images.length) % images.length;
       const source = images[current];
+      const view = ctx.view;
       // 普通屏正在用 750w 变体时也直接用原图放大，不做二次下载
       view.src = source.currentSrc || source.src;
       if (source.getAttribute('srcset')) {
@@ -230,53 +192,113 @@ import Doodle from './Doodle.astro';
         view.removeAttribute('srcset');
       }
       view.alt = source.alt || '';
-      if (!single) count.textContent = current + 1 + ' / ' + images.length;
+      if (!ctx.single) ctx.count.textContent = current + 1 + ' / ' + images.length;
     }
 
     function open(i: number, el: HTMLElement | null): void {
+      if (!ctx) return;
       trigger = el;
       show(i);
-      dialog.showModal();
+      ctx.dialog.showModal();
       // 焦点落在画框上：保住键盘上下文，又不会一打开就在按钮上画红虚线框
-      stage.focus({ preventScroll: true });
+      ctx.stage.focus({ preventScroll: true });
     }
 
+    // 视图切换后正文 DOM 换掉：上下文（图集、按钮引用）在每次
+    // astro:page-load 重建；dialog 元素是新的，监听挂它身上随旧 DOM 丢弃。
+    document.addEventListener('astro:page-load', () => {
+      ctx = null;
+      const dlg = document.getElementById(
+        'lightbox',
+      ) as HTMLDialogElement | null;
+      const frame = document.getElementById(
+        'lightbox-frame',
+      ) as HTMLElement | null;
+      const img = document.getElementById(
+        'lightbox-img',
+      ) as HTMLImageElement | null;
+      const countEl = document.getElementById('lightbox-count');
+      const prev = document.getElementById(
+        'lightbox-prev',
+      ) as HTMLButtonElement | null;
+      const next = document.getElementById(
+        'lightbox-next',
+      ) as HTMLButtonElement | null;
+      const closeBtn = document.getElementById(
+        'lightbox-close',
+      ) as HTMLButtonElement | null;
+      if (!dlg || !frame || !img || !countEl || !prev || !next || !closeBtn)
+        return;
+
+      const images = Array.from(
+        document.querySelectorAll<HTMLImageElement>('.prose img'),
+      );
+      if (!images.length) return;
+
+      const single = images.length < 2;
+      prev.hidden = single;
+      next.hidden = single;
+      countEl.hidden = single;
+
+      // 让截图能被 Tab 聚焦、回车打开
+      images.forEach((el) => {
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'button');
+        const alt = el.getAttribute('alt') || '';
+        el.setAttribute(
+          'aria-label',
+          alt ? `放大查看图片：${alt}` : '放大查看图片',
+        );
+      });
+
+      ctx = {
+        dialog: dlg,
+        stage: frame,
+        view: img,
+        count: countEl,
+        prevBtn: prev,
+        nextBtn: next,
+        closeButton: closeBtn,
+        images,
+        single,
+      };
+
+      dlg.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') show(current - 1);
+        else if (e.key === 'ArrowRight') show(current + 1);
+      });
+      prev.addEventListener('click', () => show(current - 1));
+      next.addEventListener('click', () => show(current + 1));
+      closeBtn.addEventListener('click', () => dlg.close());
+      // 点幕布关闭（figure 以外的 dialog 区域）
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg) dlg.close();
+      });
+      dlg.addEventListener('close', () => {
+        if (trigger instanceof HTMLElement) trigger.focus();
+        trigger = null;
+      });
+    });
+
+    // 事件委托绑在 document 上，一次绑定对所有页面生效
     document.addEventListener('click', (e) => {
-      if (!(e.target instanceof Element)) return;
+      if (!ctx || !(e.target instanceof Element)) return;
       const hit = e.target.closest('.prose img');
       if (!hit) return;
-      const index = images.indexOf(hit as HTMLImageElement);
+      const index = ctx.images.indexOf(hit as HTMLImageElement);
       if (index === -1) return;
       e.preventDefault();
       open(index, hit as HTMLElement);
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      if (!(e.target instanceof Element)) return;
-      if (!e.target.matches('.prose img')) return;
-      const index = images.indexOf(e.target as HTMLImageElement);
+      if (!ctx || (e.key !== 'Enter' && e.key !== ' ')) return;
+      if (!(e.target instanceof Element) || !e.target.matches('.prose img'))
+        return;
+      const index = ctx.images.indexOf(e.target as HTMLImageElement);
       if (index === -1) return;
       e.preventDefault();
       open(index, e.target as HTMLElement);
-    });
-
-    // Esc 由 <dialog> 原生处理；左右键翻图
-    dialog.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') show(current - 1);
-      else if (e.key === 'ArrowRight') show(current + 1);
-    });
-
-    prevBtn.addEventListener('click', () => show(current - 1));
-    nextBtn.addEventListener('click', () => show(current + 1));
-    closeButton.addEventListener('click', () => dialog.close());
-    // 点幕布关闭（figure 以外的 dialog 区域）
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) dialog.close();
-    });
-    dialog.addEventListener('close', () => {
-      if (trigger instanceof HTMLElement) trigger.focus();
-      trigger = null;
     });
   })();
 </script>
