@@ -7,6 +7,7 @@ import BaseHead from '../components/BaseHead.astro';
 import TopBar from '../components/TopBar.astro';
 import Sidebar from '../components/Sidebar.astro';
 import Footer from '../components/Footer.astro';
+import BackToTop from '../components/BackToTop.astro';
 
 interface Props {
   title: string;
@@ -44,6 +45,7 @@ const { title, type, lang = 'en-US' } = Astro.props;
         </aside>
       </div>
       <Footer />
+      <BackToTop />
     </div>
   </body>
 </html>

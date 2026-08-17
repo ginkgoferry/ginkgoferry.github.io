@@ -14,11 +14,12 @@ export const GET: APIRoute = async ({ site }) => {
       <guid isPermaLink="true">${escapeXml(entry.url)}</guid>
       <pubDate>${entry.published.toUTCString()}</pubDate>
       <description>${escapeXml(entry.summary)}</description>
+${entry.contentHtml ? `      <content:encoded>${escapeXml(entry.contentHtml)}</content:encoded>` : ''}
 ${entry.categories.map((category) => `      <category>${escapeXml(category)}</category>`).join('\n')}
     </item>`).join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>${escapeXml(feed.title)}</title>
     <link>${escapeXml(feed.siteUrl)}</link>

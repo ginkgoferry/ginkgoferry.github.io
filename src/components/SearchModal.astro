@@ -17,7 +17,7 @@ import Doodle from './Doodle.astro';
   <input
     id="search-input"
     type="search"
-    placeholder="search titles, tags, categories…"
+    placeholder="search titles, tags, content…"
     autocomplete="off"
     aria-controls="search-results"
     aria-describedby="search-status"
@@ -141,6 +141,22 @@ import Doodle from './Doodle.astro';
     margin-left: 0.7rem;
     font-size: 0.85rem;
   }
+
+  /* 正文命中时标题下面给一行上下文片段，命中词打上马克笔 */
+  .results :global(.snippet) {
+    margin: 0.2rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+
+  .results :global(.snippet mark) {
+    background: var(--highlight);
+    color: inherit;
+    padding: 0 0.12em;
+    border-radius: 4px 2px 5px 2px / 2px 5px 2px 4px;
+  }
 </style>
 
 <script>
@@ -150,6 +166,8 @@ import Doodle from './Doodle.astro';
     tags: string[];
     category: string | null;
     date: string;
+    /** 正文纯文本，构建期生成（见 search-index.json.ts） */
+    body: string;
   }
 
   (function () {
@@ -181,7 +199,32 @@ import Doodle from './Doodle.astro';
       return data;
     }
 
-    // 子串匹配标题/分类/标签，中文天然按字匹配
+    // 命中等级：0 标题 > 1 标签/分类 > 2 正文；同级保持时间倒序
+    function hit(post: Entry, q: string): number {
+      if (post.title.toLowerCase().indexOf(q) !== -1) return 0;
+      if (
+        (post.category || '').toLowerCase().indexOf(q) !== -1 ||
+        post.tags.some((t) => t.toLowerCase().indexOf(q) !== -1)
+      )
+        return 1;
+      if (post.body.toLowerCase().indexOf(q) !== -1) return 2;
+      return -1;
+    }
+
+    // 正文命中位置前后截一小段，命中词由调用方包 <mark>
+    function snippetOf(post: Entry, q: string): string[] | null {
+      const body = post.body.toLowerCase();
+      const at = body.indexOf(q);
+      if (at === -1) return null;
+      const start = Math.max(0, at - 16);
+      const end = Math.min(post.body.length, at + q.length + 48);
+      return [
+        start > 0 ? '…' + post.body.slice(start, at) : post.body.slice(start, at),
+        post.body.slice(at, at + q.length),
+        end < post.body.length ? post.body.slice(at + q.length, end) + '…' : post.body.slice(at + q.length, end),
+      ];
+    }
+
     function render() {
       results.textContent = '';
       const q = field.value.trim().toLowerCase();
@@ -191,40 +234,54 @@ import Doodle from './Doodle.astro';
       }
       if (!data) return;
 
-      const matches = data.filter(
-          (p) =>
-            p.title.toLowerCase().indexOf(q) !== -1 ||
-            (p.category || '').toLowerCase().indexOf(q) !== -1 ||
-            p.tags.some((t) => t.toLowerCase().indexOf(q) !== -1),
-        );
+      const matches = data
+        .map((p) => ({ post: p, level: hit(p, q) }))
+        .filter((m) => m.level !== -1)
+        .sort((a, b) => a.level - b.level);
       const hits = matches.slice(0, 10);
 
       if (!hits.length) {
         const empty = document.createElement('li');
         empty.className = 'muted';
-        empty.textContent = 'no matches — try another word';
+        empty.textContent = 'no matches - try another word';
         results.appendChild(empty);
         liveStatus.textContent = 'no search results found';
         return;
       }
 
-      hits.forEach((p, index) => {
+      hits.forEach(({ post }, index) => {
         const li = document.createElement('li');
         const a = document.createElement('a');
-        a.href = `/posts/${p.id}/`;
-        a.textContent = p.title;
+        a.href = '/posts/' + post.id + '/';
+        a.textContent = post.title;
         a.dataset.resultIndex = String(index);
         const when = document.createElement('span');
         when.className = 'when faint';
-        when.textContent = p.date;
+        when.textContent = post.date;
         li.appendChild(a);
         li.appendChild(when);
+
+        // 标题没直接命中时，补一行正文片段帮读者确认
+        if (post.title.toLowerCase().indexOf(q) === -1) {
+          const parts = snippetOf(post, q);
+          if (parts) {
+            const p = document.createElement('p');
+            p.className = 'snippet';
+            p.appendChild(document.createTextNode(parts[0]));
+            const mark = document.createElement('mark');
+            mark.textContent = parts[1];
+            p.appendChild(mark);
+            p.appendChild(document.createTextNode(parts[2]));
+            li.appendChild(p);
+          }
+        }
+
         results.appendChild(li);
       });
 
       liveStatus.textContent = matches.length > hits.length
-        ? `showing ${hits.length} of ${matches.length} search results; use the up and down arrow keys to choose a result`
-        : `${hits.length} search ${hits.length === 1 ? 'result' : 'results'} found; use the up and down arrow keys to choose a result`;
+        ? `showing ${hits.length} of ${matches.length} search results; enter opens the top hit, arrow keys move`
+        : `${hits.length} search ${hits.length === 1 ? 'result' : 'results'} found; enter opens the top hit, arrow keys move`;
     }
 
     function resultLinks(): HTMLAnchorElement[] {
@@ -238,16 +295,37 @@ import Doodle from './Doodle.astro';
       links[next].focus();
     }
 
-    openBtn.addEventListener('click', () => {
+    function openDialog() {
       dialog.showModal();
       field.focus();
       liveStatus.textContent = 'loading search index';
       load().then(render).catch(() => {
         liveStatus.textContent = 'search is temporarily unavailable';
       });
+    }
+
+    openBtn.addEventListener('click', openDialog);
+
+    // Ctrl/Cmd+K：开关注图弹窗（开着时再按一次关闭）
+    document.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        if (dialog.open) dialog.close();
+        else openDialog();
+      }
     });
+
     field.addEventListener('input', render);
     field.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        // 回车直接去第一个结果
+        const first = resultLinks()[0];
+        if (first) {
+          event.preventDefault();
+          first.click();
+        }
+        return;
+      }
       if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
       event.preventDefault();
       const links = resultLinks();

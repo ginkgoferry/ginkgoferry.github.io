@@ -5,6 +5,8 @@ import FormattedDate from '../../components/FormattedDate.astro';
 import TocRail from '../../components/TocRail.astro';
 import TocFab from '../../components/TocFab.astro';
 import Comments from '../../components/Comments.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import ReadingProgress from '../../components/ReadingProgress.astro';
 import { GOATCOUNTER_ID } from '../../consts';
 import { getSortedPosts, readingTime, wordCount, formatCount } from '../../utils/posts';
 
@@ -32,6 +34,8 @@ const words = wordCount(post.body);
   type="article"
   lang="zh-CN"
 >
+  <ReadingProgress />
+  <Lightbox />
   <article>
     <header>
       <h1><span class="underline-rough">{post.data.title}</span></h1>

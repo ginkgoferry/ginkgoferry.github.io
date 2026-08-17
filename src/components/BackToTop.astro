@@ -1,0 +1,89 @@
+---
+// 回到顶部：滚过一屏多才浮出来；文章页右下角有目录按钮时错开叠在它上方。
+import Doodle from './Doodle.astro';
+---
+
+<button id="back-top" type="button" class="back-top" aria-label="back to top">
+  <Doodle name="arrow" class="up" />
+</button>
+
+<style>
+  .back-top {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    background: var(--card);
+    border: 1.6px solid var(--line-strong);
+    border-radius: 1.2rem 0.9rem 1.3rem 0.8rem / 0.9rem 1.3rem 0.8rem 1.2rem;
+    color: var(--ink-soft);
+    box-shadow: 3px 4px 0 var(--shadow);
+    cursor: pointer;
+    transform: rotate(-1.2deg);
+    transition:
+      opacity 0.2s ease,
+      transform 0.15s ease,
+      color 0.15s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .back-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .back-top:hover {
+    color: var(--red);
+    transform: rotate(0deg) translateY(-2px);
+  }
+
+  .back-top :global(.up) {
+    width: 1.35rem;
+    height: 0.75rem;
+    transform: rotate(-82deg);
+  }
+
+  /* 窄屏文章页右下角已有目录浮动按钮（z-index 70），叠到它上面 */
+  :global(body:has(.toc-fab)) .back-top {
+    bottom: 4.6rem;
+  }
+</style>
+
+<script>
+  (function () {
+    const el = document.getElementById(
+      'back-top',
+    ) as HTMLButtonElement | null;
+    if (!el) return;
+    // 守卫后重新绑定：闭包里不继承外部的控制流窄化
+    const btn = el;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let ticking = false;
+
+    function update(): void {
+      ticking = false;
+      btn.classList.toggle('visible', window.scrollY > 480);
+    }
+
+    function schedule(): void {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    update();
+
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    });
+  })();
+</script>

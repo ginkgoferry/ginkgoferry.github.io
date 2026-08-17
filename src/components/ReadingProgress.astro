@@ -1,0 +1,63 @@
+---
+// 阅读进度：顶栏装订线（棕）下面一条红笔波浪，读到哪儿描到哪儿。
+// 宽度由 JS 直接设在 .fill 上，不用 clip-path/var 组合，兼容性稳。
+---
+
+<div class="reading-progress" aria-hidden="true"><div class="fill"></div></div>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    /* 压在顶栏下沿装订线的正下方，红棕两条波浪不叠影 */
+    top: calc(var(--topbar-h) + 2px);
+    left: 0;
+    width: 100%;
+    height: 6px;
+    z-index: 55;
+    pointer-events: none;
+  }
+
+  .fill {
+    height: 100%;
+    width: 0;
+    background: var(--red);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6' viewBox='0 0 24 6'%3E%3Cpath d='M0 3c2-2.2 4-2.2 6 0s4 2.2 6 0 4-2.2 6 0 4 2.2 6 0' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E")
+      repeat-x;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6' viewBox='0 0 24 6'%3E%3Cpath d='M0 3c2-2.2 4-2.2 6 0s4 2.2 6 0 4-2.2 6 0 4 2.2 6 0' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E")
+      repeat-x;
+    -webkit-mask-size: 24px 6px;
+    mask-size: 24px 6px;
+  }
+</style>
+
+<script>
+  (function () {
+    const found = document.querySelector<HTMLElement>('.reading-progress');
+    const fillEl = found?.querySelector<HTMLElement>('.fill');
+    if (!found || !fillEl) return;
+    // 守卫后重新绑定：闭包里不继承外部的控制流窄化
+    const fill = fillEl;
+
+    let ticking = false;
+
+    function update(): void {
+      ticking = false;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      // 太短的页面不值得画进度
+      const p = max > 40 ? (window.scrollY / max) * 100 : 0;
+      fill.style.width = p.toFixed(2) + '%';
+    }
+
+    function schedule(): void {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    window.addEventListener('hashchange', schedule);
+    update();
+  })();
+</script>

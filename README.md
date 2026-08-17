@@ -38,7 +38,7 @@ npm run publish -- ~/Notes/post.md --push                   # convert, then git 
 
 The script handles:
 
-- Typora absolute-path images (including narrow no-break spaces in filenames) — copied to `public/images/<slug>/` with references rewritten, and PNG/JPEG converted to WebP automatically
+- Typora absolute-path images (including narrow no-break spaces in filenames) — copied to `public/images/<slug>/` with references rewritten, PNG/JPEG converted to WebP automatically, and wide images get an extra `@750w.webp` responsive variant
 - `[!NOTE]`-style callouts — converted to plain blockquotes
 - Frontmatter generation — title from the first `#` heading or the filename, date defaults to today
 
@@ -70,6 +70,7 @@ Images go in `public/images/<slug>/` and are referenced by site-root path: `![al
 | Colors, fonts, line width, prose layout | `src/styles/global.css` |
 | Homepage copy | `src/pages/index.astro` |
 | Top bar / sidebar / footer | `src/components/TopBar.astro`, `Sidebar.astro`, `Footer.astro` |
+| Image zoom, reading progress, back-to-top | `src/components/Lightbox.astro`, `ReadingProgress.astro`, `BackToTop.astro` |
 
 Colors are defined once as CSS variables at the top of `global.css`; each theme (light/dark) changes in a single place.
 
@@ -86,7 +87,7 @@ The site generates an RSS feed during every build:
 
 - RSS: <https://ginkgoferry.github.io/rss.xml>
 
-Feed readers discover it automatically from the metadata in every page, and the hand-drawn RSS icon in the sidebar links to it. Add an optional `description` to a post's frontmatter to control its feed summary; otherwise a short summary is generated from the Markdown body.
+Feed readers discover it automatically from the metadata in every page, and the hand-drawn RSS icon in the sidebar links to it. Items carry the full rendered post in `content:encoded` (site-relative links rewritten to absolute), so readers can subscribe full-text. Add an optional `description` to a post's frontmatter to control its feed summary; otherwise a short summary is generated from the Markdown body.
 
 ## Custom domain
 
@@ -99,15 +100,17 @@ Feed readers discover it automatically from the metadata in every page, and the 
 
 ```text
 src/
-├── components/     # top bar, sidebar, right rail, note cards, doodle icons, theme toggle
+├── components/     # top bar, sidebar, right rail, note cards, doodle icons, theme toggle,
+│                   # search modal, image lightbox, reading progress, back-to-top, TOC
 ├── content/posts/  # posts
 ├── layouts/        # page shell
 ├── pages/          # routes (file path = URL)
-├── plugins/        # rehype plugin wrapping wide tables in a scrollable container
-├── styles/         # global CSS
-├── utils/          # sorting, reading time
+├── plugins/        # rehype plugins: table wrap, image attrs (lazy/width/srcset),
+│                   # code-block wrap + copy button + language tag, heading anchors
+├── styles/         # global CSS (design system)
+├── utils/          # sorting, reading time, plain text (search index + feed)
 ├── consts.ts       # site configuration
 └── content.config.ts  # post frontmatter schema
 ```
 
-The site ships with a sitemap, RSS feed, category shelves, tag pages, an archive timeline, pagination, search, prev/next navigation, and per-post tables of contents. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.
+The site ships with a sitemap, full-text RSS feed, category shelves, tag pages, an archive timeline, pagination, full-text search (Ctrl/Cmd+K, arrow keys, Enter opens the top hit), an image lightbox with keyboard navigation, per-post reading progress, a back-to-top button, prev/next navigation, and per-post tables of contents. Post images get width/height injected at build time (no layout shift) plus a responsive 750w variant when available. The visual style is a hand-drawn notebook: LXGW WenKai everywhere (its Latin glyphs included), hand-sketched borders, note cards, and washi tape. The light theme is warm paper; the dark theme is a chalkboard. Pages are static HTML with small client-side scripts for search, theme switching, GoatCounter, and Giscus.

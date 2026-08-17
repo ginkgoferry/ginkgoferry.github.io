@@ -155,6 +155,16 @@ for (const file of files) {
         try {
           await sharp(local).webp({ quality: 80 }).toFile(dest);
           webpCount += 1;
+          // 宽图顺手出一张 750w 变体：正文列宽 ~660px，普通屏用小图，Retina 用原图
+          try {
+            const meta = await sharp(dest).metadata();
+            if (meta.width > 900) {
+              await sharp(dest).resize({ width: 750 }).webp({ quality: 80 })
+                .toFile(path.join(imgDir, `${name.replace(/\.webp$/, '')}@750w.webp`));
+            }
+          } catch {
+            /* 变体失败不影响发布 */
+          }
         } catch (err) {
           console.warn(`⚠️ WebP 转换失败，保留原图：${path.basename(local)}（${err.message}）`);
           fs.copyFileSync(local, path.join(imgDir, `img-${String(n).padStart(2, '0')}${ext}`));

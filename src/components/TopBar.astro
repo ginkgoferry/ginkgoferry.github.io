@@ -12,8 +12,9 @@ import {
 
 const stats = await getSiteStats();
 const latestUpdate = getLatestUpdatedDate(await getSortedPosts());
+// 同年只显示 MM-DD；跨年（翻旧账）时带上年份免得歧义
 const updated = latestUpdate
-  ? `${String(latestUpdate.getMonth() + 1).padStart(2, '0')}-${String(latestUpdate.getDate()).padStart(2, '0')}`
+  ? `${latestUpdate.getFullYear() === new Date().getFullYear() ? '' : latestUpdate.getFullYear() + '-'}${String(latestUpdate.getMonth() + 1).padStart(2, '0')}-${String(latestUpdate.getDate()).padStart(2, '0')}`
   : '—';
 ---
 
