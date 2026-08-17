@@ -19,7 +19,20 @@ function walk(node) {
         type: 'element',
         tagName: 'div',
         properties: { className: ['pre-wrap'] },
-        children: [child],
+        children: [
+          child,
+          // 复制按钮挂在不裁剪的外层上，随 .pre-wrap hover 显形
+          {
+            type: 'element',
+            tagName: 'button',
+            properties: {
+              className: ['code-copy'],
+              type: 'button',
+              ariaLabel: 'copy code',
+            },
+            children: [{ type: 'text', value: 'copy' }],
+          },
+        ],
       };
     }
   }

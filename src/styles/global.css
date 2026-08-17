@@ -83,6 +83,17 @@ html {
   }
 }
 
+/* 「减弱动态效果」：贴纸回正、卡片浮起、显隐过渡全部压平 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 body {
   margin: 0;
   background: var(--paper);
@@ -652,6 +663,39 @@ h4 {
   margin-top: 1.9em;
 }
 
+/* 标题末尾的 # 锚点：hover 标题才显形，像红笔在页边做的记号。
+   符号用 CSS 画，不放文字节点——避免混进 TOC 采集的标题文本 */
+.prose .heading-anchor {
+  margin-left: 0.35em;
+  color: var(--red);
+  font-size: 0.8em;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.prose .heading-anchor::before {
+  content: '#';
+}
+
+.prose h2:hover .heading-anchor,
+.prose h3:hover .heading-anchor,
+.prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+.prose .heading-anchor:hover {
+  text-decoration: underline;
+  text-decoration-style: wavy;
+}
+
+/* 触屏没有 hover，淡淡地常驻 */
+@media (hover: none) {
+  .prose .heading-anchor {
+    opacity: 0.5;
+  }
+}
+
 .prose ul,
 .prose ol {
   padding-left: 1.5em;
@@ -718,10 +762,61 @@ h4 {
   line-height: 1.7;
 }
 
+/* 复制按钮：别在代码纸右上角的小纸条，hover 代码块才显形 */
+.prose .code-copy {
+  position: absolute;
+  top: -0.5rem;
+  right: 0.7rem;
+  z-index: 2;
+  padding: 0.05rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 8px 3px 9px 4px / 4px 9px 3px 8px;
+  box-shadow: 2px 2px 0 var(--shadow);
+  cursor: pointer;
+  transform: rotate(1.5deg);
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.prose .pre-wrap:hover .code-copy,
+.prose .code-copy:focus-visible {
+  opacity: 1;
+}
+
+.prose .code-copy:hover {
+  color: var(--red);
+  transform: rotate(0deg) translateY(-1px);
+}
+
+.prose .code-copy[data-copied] {
+  color: var(--green);
+}
+
+/* 触屏没有 hover，按钮一直放着 */
+@media (hover: none) {
+  .prose .code-copy {
+    opacity: 1;
+  }
+}
+
 .prose img {
   border: 1.6px solid var(--line-strong);
   border-radius: 6px 16px 8px 18px / 14px 7px 16px 8px;
   box-shadow: 3px 4px 0 var(--shadow);
+  transition: filter 0.2s ease;
+}
+
+/* 亮色截图贴在黑板上太晃眼，压暗一点、收一点饱和度 */
+:root[data-theme='dark'] .prose img {
+  filter: brightness(0.88) saturate(0.88);
 }
 
 /* 宽表格在窄屏上自己滚 */

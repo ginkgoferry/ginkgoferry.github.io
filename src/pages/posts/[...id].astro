@@ -133,6 +133,53 @@ const words = wordCount(post.body);
     )
   }
 
+  <script is:inline>
+    // 代码块复制：行号是 CSS 计数器画的，不在 DOM 文本里，复制出来是干净代码
+    (function () {
+      function flash(btn) {
+        btn.textContent = 'copied!';
+        btn.setAttribute('data-copied', '');
+        setTimeout(function () {
+          btn.textContent = 'copy';
+          btn.removeAttribute('data-copied');
+        }, 1600);
+      }
+
+      function legacyCopy(text, btn) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          // 已废弃但仍是唯一兜底：clipboard API 不可用时的最后手段
+          if (document.execCommand('copy')) flash(btn);
+        } catch (_) {
+          /* 剪贴板不可用就保持原样 */
+        }
+        ta.remove();
+      }
+
+      document.addEventListener('click', function (e) {
+        var btn = e.target instanceof Element ? e.target.closest('.code-copy') : null;
+        if (!btn) return;
+        var pre = btn.closest('.pre-wrap');
+        pre = pre && pre.querySelector('pre');
+        if (!pre) return;
+        var text = pre.textContent || '';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { flash(btn); },
+            function () { legacyCopy(text, btn); },
+          );
+        } else {
+          legacyCopy(text, btn);
+        }
+      });
+    })();
+  </script>
+
   <TocFab headings={headings} />
 
   <Fragment slot="rail">
